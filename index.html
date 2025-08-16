@@ -1,76 +1,74 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Área do Paciente — Integrada Neuropsicologia</title>
-  <meta name="description" content="Portal do paciente para acessar e preencher testes liberados."/>
-  <style>
-    :root{
-      --bg:#0f172a; --card:#111827; --muted:#94a3b8; --text:#e5e7eb;
-      --pri:#4f46e5; --ok:#22c55e; --warn:#f59e0b; --line:#1f2937; --err:#ef4444;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu}
-    .wrap{max-width:960px;margin:24px auto;padding:0 16px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
-    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px}
-    .brand{font-weight:700;overflow-wrap:anywhere}
-    h1,h2{margin:0 0 12px}
-    h2{font-size:1.05rem;color:var(--muted)}
-    .btn{display:inline-flex;align-items:center;gap:8px;background:var(--pri);border:none;color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer}
-    .btn.sec{background:#334155}
-    .btn.ok{background:var(--ok)}
-    .btn:disabled{opacity:.6;cursor:not-allowed}
-    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
-    .msg{margin:10px 0;padding:10px;border-radius:8px}
-    .msg.ok{background:#052e1a;color:#b3f7c1;border:1px solid #114d2a}
-    .msg.err{background:#3b0d0d;color:#ffd0d0;border:1px solid #5b1919}
-    .msg.warn{background:#3a2903;color:#ffe6b0;border:1px solid #5c4307}
-
-    /* cartão de dados do paciente */
-    .pac-card{display:grid;grid-template-columns:1fr;gap:10px}
-    .pac-name{font-size:1.15rem;font-weight:800}
-    .chips{display:flex;gap:8px;flex-wrap:wrap}
-    .chip{font-size:.8rem;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:#0b1220;color:#cbd5e1}
-    .chip b{color:#e5e7eb;font-weight:700}
-
-    /* grid de testes */
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:10px}
-    @media (max-width:560px){ .grid{grid-template-columns:1fr} }
-    .test{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
-    .test-head{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;min-width:0}
-    .test-title{font-weight:700;overflow-wrap:anywhere;word-break:break-word;min-width:0}
-    .test-code{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
-    .tag{justify-self:start;font-size:.75rem;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
-    .tag.ja{background:#09331b;color:#9af0b1;border-color:#124d29}
-    .tag.preenchido{background:#07263a;color:#b9e7ff;border-color:#0a3c66}
-    .hidden{display:none !important}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Área do Paciente — Integrada Neuropsicologia</title>
+<meta name="description" content="Portal do paciente para acessar e preencher testes liberados."/>
+<style>
+  :root{
+    --bg:#0f172a; --card:#111827; --muted:#94a3b8; --text:#e5e7eb;
+    --pri:#4f46e5; --ok:#22c55e; --warn:#f59e0b; --line:#1f2937; --err:#ef4444;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu}
+  .wrap{max-width:960px;margin:24px auto;padding:0 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px}
+  .brand{font-weight:700;overflow-wrap:anywhere}
+  h1,h2{margin:0 0 12px}
+  h2{font-size:1.05rem;color:var(--muted)}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--pri);border:none;color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer}
+  .btn.sec{background:#334155}
+  .btn.ok{background:var(--ok)}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+  .msg{margin:10px 0;padding:10px;border-radius:8px}
+  .msg.ok{background:#052e1a;color:#b3f7c1;border:1px solid #114d2a}
+  .msg.err{background:#3b0d0d;color:#ffd0d0;border:1px solid #5b1919}
+  .msg.warn{background:#3a2903;color:#ffe6b0;border:1px solid #5c4307}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:10px}
+  @media (max-width:560px){ .grid{grid-template-columns:1fr} }
+  .test{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+  .test-head{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;min-width:0}
+  @media (max-width:560px){ .test-head{grid-template-columns:1fr} }
+  .test-title{font-weight:700;overflow-wrap:anywhere;word-break:break-word;min-width:0}
+  .test-code{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
+  .tag{justify-self:start;font-size:.75rem;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+  .tag.ja{background:#09331b;color:#9af0b1;border-color:#124d29}
+  .tag.preenchido{background:#07263a;color:#b9e7ff;border-color:#0a3c66}
+  .hidden{display:none !important}
+  .grid-info{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:720px){ .grid-info{grid-template-columns:1fr} }
+  .info-item{background:#0b1220;border:1px solid var(--line);border-radius:10px;padding:10px}
+  .info-item b{display:block;margin-bottom:4px;color:#cbd5e1}
+</style>
 </head>
 <body>
   <div class="wrap">
     <div class="top">
       <div class="brand">Integrada Neuropsicologia — Área do Paciente</div>
-      <div><button id="btnSair" class="btn sec hidden">Sair</button></div>
+      <div>
+        <button id="btnSair" class="btn sec hidden">Sair</button>
+      </div>
     </div>
 
-    <!-- STATUS / ERROS -->
-    <div id="statusBox" class="msg warn">Carregando…</div>
+    <!-- AVISOS -->
+    <div id="msg" class="msg hidden"></div>
 
     <!-- APP -->
     <section id="viewApp" class="card hidden">
       <h1>Olá, <span id="pacNomeSpan">Paciente</span></h1>
 
-      <!-- DADOS DO PACIENTE (DESTAQUE) -->
-      <div class="pac-card" id="pacCard">
-        <div class="pac-name" id="pacNameBig">—</div>
-        <div class="chips" id="pacChips"><!-- chips de dados entram aqui --></div>
+      <!-- Dados do paciente -->
+      <div class="grid-info" id="pacInfo" style="margin:10px 0 6px;">
+        <!-- preenchido via JS -->
       </div>
 
       <div class="toolbar">
         <button id="btnAtualizar" class="btn sec">Atualizar</button>
-        <span id="resume" class="chip">—</span>
+        <span id="resume" class="tag">—</span>
       </div>
 
       <h2>Seus testes liberados</h2>
@@ -79,45 +77,63 @@
   </div>
 
 <script>
-/* ===========================
-   CONFIG
-   =========================== */
+/** ===========================
+ *  CONFIG
+ *  =========================== */
 const SHEETDB_BASE = "https://sheetdb.io/api/v1/8pmdh33s9fvy8";
 const SHEETS = { TESTS:"Tests", PATIENTS:"Patients", TOKENS:"LinkTokens" };
 
-// Fallbacks/mapeamentos de URLs
-const BASE_TEST_URL = "https://seu-dominio.com/testes"; // Preencher -> BASE_TEST_URL/<code>
-const BASE_FORM_URL = "https://seu-dominio.com/form";   // Enviar link -> BASE_FORM_URL/<code>
-const TEST_URLS  = { /* "BAI": "https://seus-formularios.com/bai" */ };
-const SHARE_URLS = { /* "BAI": "https://seus-formularios.com/bai_share" */ };
+/* URLs base — se você não preencher `form_url`/`share_url` na aba Tests,
+   o código usa esses padrões como fallback. */
+const BASE_TEST_URL = "https://integradaneuropsicologia.github.io/formularios"; // abrirá BASE_TEST_URL/<code>.html
+const BASE_FORM_URL = "https://integradaneuropsicologia.github.io/formularios/share"; // link p/ segunda fonte
 
-// parâmetros que vão junto no link do teste
-const APPEND_ID_PARAMS   = true;
-const INCLUDE_NASC_PARAM = true;
+/* Mapa opcional (sobrescreve o da planilha, se quiser centralizar aqui) */
+// Ex.: TEST_URLS["BAI"] = "https://integradaneuropsicologia.github.io/formularios/bai.html";
+const TEST_URLS = {
+  // "BAI": "https://.../bai.html",
+};
+const SHARE_URLS = {
+  // "SRS2": "https://.../srs2-share.html"
+};
 
-const TEST_PREFIX = "";       // se usar prefixo nas colunas de teste na Patients
-const DONE_SUFFIX = "_FEITO"; // coluna opcional <CODE>_FEITO = "sim"
+/* Importantíssimo: agora passamos o TOKEN no link do “Preencher” */
+const APPEND_TOKEN_PARAM = true;
+/* Para links de segunda-fonte, NÃO usar token (não dê acesso ao portal!) */
 const DEFAULT_TARGETS = ["pais","professores","segunda_fonte","heterorrelato"];
 
-/* ===========================
-   HELPERS
-   =========================== */
+const TEST_PREFIX = "";       // caso você use prefixo nas colunas (ex.: TEST_)
+const DONE_SUFFIX  = "_FEITO";// coluna opcional <CODE>_FEITO = "sim" => preenchido
+
+/** ===========================
+ *  HELPERS
+ *  =========================== */
 const $ = s => document.querySelector(s);
+const el = (tag, opts={}) => Object.assign(document.createElement(tag), opts);
 const onlyDigits = s => (s||"").replace(/\D+/g,"");
 const qs = k => new URLSearchParams(location.search).get(k) || "";
-function setMsg(box, text, type="ok"){
+function setMsg(text, type="ok"){
+  const box=$("#msg");
   box.textContent = text;
-  box.className = "msg "+type;
+  box.className = "msg " + (type==="ok"?"ok":type==="warn"?"warn":"err");
   text ? box.classList.remove("hidden") : box.classList.add("hidden");
 }
-function formatCPF(cpfDigits){
-  const d = onlyDigits(cpfDigits||"").padEnd(11,"");
-  if(d.length<11) return cpfDigits||"";
-  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9,11)}`;
+async function sheetSearch(sheet, params){
+  const usp = new URLSearchParams(params);
+  const url = `${SHEETDB_BASE}/search?sheet=${encodeURIComponent(sheet)}&${usp.toString()}`;
+  const r = await fetch(url);
+  if(!r.ok) throw new Error("Falha ao buscar em "+sheet);
+  return r.json();
 }
-function formatDateBR(iso){
+function maskCPF(cpf){
+  const d = onlyDigits(cpf||"");
+  if(d.length!==11) return cpf||"";
+  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+}
+function fmtDateISO(iso){
   if(!iso) return "";
-  const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`;
+  const [y,m,d] = iso.split("-"); if(!y||!m||!d) return iso;
+  return `${d}/${m}/${y}`;
 }
 function buildUrl(base, params){
   try{
@@ -130,116 +146,94 @@ function buildUrl(base, params){
   }
 }
 
-/* ===========================
-   SHEETDB
-   =========================== */
-async function sheetSearch(sheet, params){
-  const usp = new URLSearchParams(params);
-  const url = `${SHEETDB_BASE}/search?sheet=${encodeURIComponent(sheet)}&${usp.toString()}`;
-  const r = await fetch(url);
-  if(!r.ok) throw new Error("Falha ao buscar em "+sheet);
-  return r.json();
-}
+/** ===========================
+ *  ESTADO
+ *  =========================== */
+let TOKEN = "";
+let patient = null;
+let testsCatalog = []; // {code,label,order,shareable,targets,form_url,share_url}
 
-/* ===========================
-   ESTADO
-   =========================== */
-let patient = null;    // linha Patients
-let testsCatalog = []; // catálogo Tests
-
-/* ===========================
-   TOKEN LOGIN
-   =========================== */
-(async function autoLoginByToken(){
-  const token = qs("token");
-  const status = $("#statusBox");
-  if(!token){
-    setMsg(status, "Link inválido: token ausente. Solicite um novo link ao consultório.", "err");
-    return;
-  }
+/** ===========================
+ *  BOOT VIA TOKEN
+ *  =========================== */
+(async function boot(){
   try{
-    // 1) validar token e obter CPF
-    const rows = await sheetSearch(SHEETS.TOKENS, { token });
-    if(!rows || !rows.length) throw new Error("Token inválido ou não encontrado.");
-    const t = rows[0];
+    TOKEN = qs("token");
+    if(!TOKEN){ setMsg("Link inválido (sem token). Solicite um novo link ao consultório.", "err"); return; }
 
-    // regras básicas (opcionais: ajuste conforme colunas)
+    // 1) valida token e pega cpf
+    const trows = await sheetSearch(SHEETS.TOKENS, { token: TOKEN });
+    if(!trows || !trows.length) throw new Error("Token inválido ou expirado.");
+    const t = trows[0];
     const disabled = String(t.disabled||"não").toLowerCase()==="sim";
     const expired  = t.expires_at && (new Date(t.expires_at) < new Date());
-    if(disabled || expired) throw new Error("Token expirado ou desativado.");
+    if(disabled || expired) throw new Error("Token desativado/expirado. Peça um novo link.");
 
     const cpf = onlyDigits(t.cpf||"");
     if(!cpf) throw new Error("Token sem CPF vinculado.");
 
-    // 2) buscar paciente apenas por CPF
-    const found = await sheetSearch(SHEETS.PATIENTS, { cpf });
-    if(!found || !found.length) throw new Error("Paciente não encontrado. Contate o consultório.");
-    patient = found[0];
+    // 2) carrega paciente
+    const prows = await sheetSearch(SHEETS.PATIENTS, { cpf });
+    if(!prows || !prows.length) throw new Error("Paciente não encontrado.");
+    patient = prows[0];
 
-    // 3) carregar catálogo e renderizar
+    // 3) carrega catálogo de testes
     await loadTests();
-    fillPatientHeader();
-    renderTests();
 
-    // mostrar app
-    setMsg(status, "");
+    // 4) render
+    $("#pacNomeSpan").textContent = patient.nome || "Paciente";
+    renderPatientInfo();
+    renderTests();
     $("#viewApp").classList.remove("hidden");
     $("#btnSair").classList.remove("hidden");
+    setMsg(""); // some
   }catch(e){
-    setMsg(status, e.message || "Erro ao acessar. Tente novamente.", "err");
     console.error(e);
+    setMsg(e.message || "Falha ao abrir sua área. Tente novamente mais tarde.", "err");
   }
 })();
 
 $("#btnSair").addEventListener("click", ()=>{
-  patient=null; testsCatalog=[];
-  $("#testsGrid").innerHTML="";
-  $("#resume").textContent="—";
-  $("#pacNomeSpan").textContent="Paciente";
-  $("#pacNameBig").textContent="—";
-  $("#pacChips").innerHTML="";
-  $("#viewApp").classList.add("hidden");
-  setMsg($("#statusBox"), "Sessão encerrada. Feche o navegador.", "ok");
+  // apenas remove token da barra e limpa
+  history.replaceState({}, "", location.pathname);
+  location.reload();
 });
 
-$("#btnAtualizar").addEventListener("click", async ()=>{
-  if(!patient) return;
-  const cpf = onlyDigits(patient.cpf);
-  const found = await sheetSearch(SHEETS.PATIENTS, { cpf });
-  if(found && found.length) patient = found[0];
-  await loadTests(true);
-  fillPatientHeader();
-  renderTests();
-});
-
-/* ===========================
-   DADOS DO PACIENTE (DESTAQUE)
-   =========================== */
-function fillPatientHeader(){
-  if(!patient) return;
-  const nome = (patient.nome||"Paciente").trim();
-  $("#pacNomeSpan").textContent = nome;
-  $("#pacNameBig").textContent  = nome;
-
-  const chips = $("#pacChips");
-  chips.innerHTML = "";
-  const addChip = (label, val) => {
-    if(!val) return;
-    const sp = document.createElement("span");
-    sp.className="chip";
-    sp.innerHTML = `<b>${label}:</b> ${val}`;
-    chips.appendChild(sp);
-  };
-
-  addChip("CPF", formatCPF(patient.cpf));
-  addChip("Nascimento", formatDateBR(patient.data_nascimento));
-  addChip("E-mail", (patient.email||"").trim());
-  addChip("WhatsApp", (patient.whatsapp||"").trim());
+/** ===========================
+ *  PACIENTE (info)
+ *  =========================== */
+function renderPatientInfo(){
+  const g = $("#pacInfo");
+  g.innerHTML = "";
+  const info = [
+    ["Nome", patient.nome || "-"],
+    ["CPF", maskCPF(patient.cpf)],
+    ["Nascimento", fmtDateISO(patient.data_nascimento)],
+    ["E-mail", patient.email || "-"],
+    ["WhatsApp", patient.whatsapp || "-"],
+  ];
+  for(const [k,v] of info){
+    const it = el("div",{className:"info-item"});
+    it.innerHTML = `<b>${k}</b><div>${v||"-"}</div>`;
+    g.appendChild(it);
+  }
 }
 
-/* ===========================
-   TESTES
-   =========================== */
+/** ===========================
+ *  TESTES
+ *  =========================== */
+$("#btnAtualizar").addEventListener("click", async ()=>{
+  if(!patient) return;
+  try{
+    const prows = await sheetSearch(SHEETS.PATIENTS, { cpf: patient.cpf });
+    if(prows && prows.length) patient = prows[0];
+    await loadTests(true);
+    renderTests();
+    setMsg("Atualizado.", "ok");
+    setTimeout(()=>setMsg(""), 800);
+  }catch(_){/*silêncio*/ }
+});
+
 async function loadTests(skipFetch){
   if(!skipFetch){
     const rows = await sheetSearch(SHEETS.TESTS, {active:"sim"});
@@ -248,123 +242,94 @@ async function loadTests(skipFetch){
       const label = (r.label||code).trim();
       const order = Number(r.order||9999);
       const shareable = String(r.shareable||"não").trim().toLowerCase()==="sim";
-      // alvos que podem receber link compartilhável
-      const targetsArr = String(r.targets||"")
-        .split(/[;,]+/)
-        .map(s=>s.trim().toLowerCase())
-        .filter(Boolean);
-      const form_url  = (r.form_url||"").trim();
+      const targetsArr = String(r.targets||"").split(/[;,]+/).map(s=>s.trim().toLowerCase()).filter(Boolean);
+      const form_url = (r.form_url||"").trim();
       const share_url = (r.share_url||"").trim();
       return {
-        code, label, order, shareable,
-        targets: (shareable ? (targetsArr.length?targetsArr:DEFAULT_TARGETS) : []),
+        code, label, order,
+        shareable,
+        targets: (shareable?(targetsArr.length?targetsArr:DEFAULT_TARGETS):[]),
         form_url, share_url
       };
     }).filter(t=>t.code).sort((a,b)=> a.order-b.order || a.label.localeCompare(b.label));
   }
-
   // resumo
-  const allowed = testsCatalog.filter(t => testAllowed(t));
-  const cJa  = allowed.filter(t => testStatus(t)==="ja").length;
-  const cOk  = allowed.filter(t => testStatus(t)==="preenchido").length;
+  const allowed = testsCatalog.filter(t => isAllowed(t));
+  const cJa  = allowed.filter(t => statusOf(t)==="ja").length;
+  const cOk  = allowed.filter(t => statusOf(t)==="preenchido").length;
   $("#resume").textContent = `Liberados: ${allowed.length} • Em aberto: ${cJa} • Preenchidos: ${cOk}`;
 }
 
 function colFor(t){ return (TEST_PREFIX ? TEST_PREFIX + t.code : t.code); }
 function doneColFor(t){ return colFor(t) + DONE_SUFFIX; }
-
-function testAllowed(t){
-  if(!patient) return false;
-  return String(patient[colFor(t)]||"").toLowerCase()==="sim";
-}
-function testStatus(t){
-  if(!testAllowed(t)) return "oculto";
+function isAllowed(t){ return patient && String(patient[colFor(t)]||"").toLowerCase()==="sim"; }
+function statusOf(t){
+  if(!isAllowed(t)) return "oculto";
   const done = String(patient[doneColFor(t)]||"").toLowerCase()==="sim";
   return done ? "preenchido" : "ja";
 }
 
-// resolve URLs
+// Resolve URL do formulário do teste e adiciona ?token=
 function resolveFillUrl(t){
-  const cpf  = onlyDigits(patient?.cpf||"");
-  const nasc = patient?.data_nascimento || "";
-  const base = t.form_url || TEST_URLS[t.code] || `${BASE_TEST_URL}/${encodeURIComponent(t.code)}`;
-  if(!APPEND_ID_PARAMS) return base;
-  const params = { cpf };
-  if(INCLUDE_NASC_PARAM && nasc) params.nasc = nasc;
-  return buildUrl(base, params);
+  // prioridade: form_url na planilha -> mapa TEST_URLS -> fallback BASE_TEST_URL/<code>.html
+  const base =
+    t.form_url ||
+    TEST_URLS[t.code] ||
+    `${BASE_TEST_URL}/${encodeURIComponent(t.code.toLowerCase())}.html`;
+  return APPEND_TOKEN_PARAM ? buildUrl(base, { token: TOKEN }) : base;
 }
+
+// Links de “segunda fonte” NÃO devem levar token.
+// Mantém o padrão cpf+source (ou o share_url da planilha).
 function resolveShareUrl(t, target){
-  const cpf  = onlyDigits(patient?.cpf||"");
-  const base = t.share_url || SHARE_URLS[t.code] || `${BASE_FORM_URL}/${encodeURIComponent(t.code)}`;
-  const params = { cpf, source: target };
-  return buildUrl(base, params);
+  const base =
+    t.share_url ||
+    SHARE_URLS[t.code] ||
+    `${BASE_FORM_URL}/${encodeURIComponent(t.code.toLowerCase())}.html`;
+  return buildUrl(base, { cpf: onlyDigits(patient.cpf||""), source: target });
 }
 
 function renderTests(){
   const grid = $("#testsGrid");
   grid.innerHTML = "";
-  if(!patient){ grid.innerHTML = "<p class='msg warn'>Nenhum dado carregado.</p>"; return; }
+  if(!patient){ grid.innerHTML = "<p class='muted'>Nenhum dado carregado.</p>"; return; }
 
-  const list = testsCatalog.filter(t => testAllowed(t));
-  if(!list.length){ grid.innerHTML = "<p class='msg warn'>Você ainda não possui testes liberados.</p>"; return; }
+  const list = testsCatalog.filter(t => isAllowed(t));
+  if(!list.length){ grid.innerHTML = "<p class='muted'>Você ainda não possui testes liberados.</p>"; return; }
 
   for(const t of list){
-    const st = testStatus(t);
+    const st = statusOf(t);
 
-    const card = document.createElement("div");
-    card.className = "test";
+    const card = el("div", {className:"test"});
+    const head = el("div", {className:"test-head"});
+    const titleWrap = el("div", {style:"min-width:0"});
+    const title = el("div", {className:"test-title", textContent:t.label});
+    const code  = el("div", {className:"test-code", textContent:t.code});
+    titleWrap.appendChild(title); titleWrap.appendChild(code);
 
-    const head = document.createElement("div");
-    head.className = "test-head";
-
-    const titleWrap = document.createElement("div");
-    const title = document.createElement("div");
-    title.className = "test-title";
-    title.textContent = t.label;
-    const code = document.createElement("div");
-    code.className = "test-code";
-    code.textContent = t.code;
-    titleWrap.appendChild(title);
-    titleWrap.appendChild(code);
-
-    const tag = document.createElement("span");
-    tag.className = "tag "+(st==="preenchido"?"preenchido":"ja");
-    tag.textContent = (st==="preenchido" ? "preenchido" : "Pendente!");
-
+    const tag = el("span", {className:"tag "+(st==="preenchido"?"preenchido":"ja"), textContent:(st==="preenchido"?"preenchido":"Pendente!")});
     head.appendChild(titleWrap);
     head.appendChild(tag);
     card.appendChild(head);
 
-    const actions = document.createElement("div");
-    actions.className = "toolbar";
+    const actions = el("div", {className:"toolbar"});
 
     if(st==="preenchido"){
-      const btnDone = document.createElement("button");
-      btnDone.className = "btn sec";
-      btnDone.textContent = "Preenchido";
-      btnDone.disabled = true;
+      const btnDone = el("button", {className:"btn sec", textContent:"Preenchido", disabled:true});
       actions.appendChild(btnDone);
     }else{
-      const btnPre = document.createElement("button");
-      btnPre.className = "btn ok";
-      btnPre.textContent = "Preencher";
+      const btnPre = el("button", {className:"btn ok", textContent:"Preencher"});
       btnPre.addEventListener("click", ()=> window.open(resolveFillUrl(t), "_blank"));
       actions.appendChild(btnPre);
     }
 
     if(t.shareable){
-      const btnShare = document.createElement("button");
-      btnShare.className = "btn sec";
-      btnShare.textContent = "Enviar link";
+      const btnShare = el("button", {className:"btn sec", textContent:"Enviar link"});
       btnShare.addEventListener("click", async ()=>{
         const tgt = await chooseTarget(t.targets);
         if(!tgt) return;
         const shareUrl = resolveShareUrl(t, tgt);
-        let ok=false;
-        try{
-          await navigator.clipboard.writeText(shareUrl);
-          ok=true;
-        }catch(_){}
+        const ok = await navigator.clipboard.writeText(shareUrl).then(()=>true).catch(()=>false);
         alert(ok ? "Link copiado! Cole no WhatsApp." : shareUrl);
       });
       actions.appendChild(btnShare);
@@ -375,7 +340,7 @@ function renderTests(){
   }
 }
 
-// prompt simples para escolher alvo do link
+// Prompt simples para escolher o destinatário da segunda fonte
 function chooseTarget(targets){
   return new Promise((resolve)=>{
     if(!targets || !targets.length){ resolve(null); return; }
