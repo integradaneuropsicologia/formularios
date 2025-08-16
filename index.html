@@ -11,7 +11,6 @@
       --pri:#4f46e5; --ok:#22c55e; --warn:#f59e0b; --line:#1f2937; --err:#ef4444;
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu}
     .wrap{max-width:960px;margin:24px auto;padding:0 16px}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
@@ -19,32 +18,28 @@
     .brand{font-weight:700;overflow-wrap:anywhere}
     h1,h2{margin:0 0 12px}
     h2{font-size:1.05rem;color:var(--muted)}
-    label{display:block;font-weight:600;margin:10px 0 6px}
-    input,button{font:inherit}
-    input[type="text"], input[type="password"], input[type="date"]{
-      width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0b1220;color:var(--text)
-    }
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:720px){.row{grid-template-columns:1fr}}
     .btn{display:inline-flex;align-items:center;gap:8px;background:var(--pri);border:none;color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer}
     .btn.sec{background:#334155}
     .btn.ok{background:var(--ok)}
     .btn:disabled{opacity:.6;cursor:not-allowed}
-    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    .toolbar .btn{flex:0 0 auto}
-    @media (max-width:560px){
-      .toolbar{flex-direction:column;align-items:stretch}
-      .toolbar .btn{width:100%;justify-content:center}
-    }
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
     .msg{margin:10px 0;padding:10px;border-radius:8px}
     .msg.ok{background:#052e1a;color:#b3f7c1;border:1px solid #114d2a}
     .msg.err{background:#3b0d0d;color:#ffd0d0;border:1px solid #5b1919}
     .msg.warn{background:#3a2903;color:#ffe6b0;border:1px solid #5c4307}
+
+    /* cartão de dados do paciente */
+    .pac-card{display:grid;grid-template-columns:1fr;gap:10px}
+    .pac-name{font-size:1.15rem;font-weight:800}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{font-size:.8rem;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:#0b1220;color:#cbd5e1}
+    .chip b{color:#e5e7eb;font-weight:700}
+
+    /* grid de testes */
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:10px}
     @media (max-width:560px){ .grid{grid-template-columns:1fr} }
     .test{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
     .test-head{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;min-width:0}
-    @media (max-width:560px){ .test-head{grid-template-columns:1fr} }
     .test-title{font-weight:700;overflow-wrap:anywhere;word-break:break-word;min-width:0}
     .test-code{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
     .tag{justify-self:start;font-size:.75rem;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
@@ -57,37 +52,25 @@
   <div class="wrap">
     <div class="top">
       <div class="brand">Integrada Neuropsicologia — Área do Paciente</div>
-      <div>
-        <button id="btnSair" class="btn sec hidden">Sair</button>
-      </div>
+      <div><button id="btnSair" class="btn sec hidden">Sair</button></div>
     </div>
 
-    <!-- LOGIN -->
-    <section id="viewLogin" class="card">
-      <h1>Entrar</h1>
-      <p class="muted">Digite seu <strong>CPF</strong> e sua <strong>data de nascimento</strong>.</p>
-      <div class="row">
-        <div>
-          <label>CPF (somente números)</label>
-          <input id="cpf" type="text" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" />
-        </div>
-        <div>
-          <label>Data de nascimento</label>
-          <input id="nasc" type="date" />
-        </div>
-      </div>
-      <div class="toolbar">
-        <button id="btnEntrar" class="btn">Entrar</button>
-      </div>
-      <div id="loginMsg" class="msg hidden"></div>
-    </section>
+    <!-- STATUS / ERROS -->
+    <div id="statusBox" class="msg warn">Carregando…</div>
 
     <!-- APP -->
     <section id="viewApp" class="card hidden">
       <h1>Olá, <span id="pacNomeSpan">Paciente</span></h1>
+
+      <!-- DADOS DO PACIENTE (DESTAQUE) -->
+      <div class="pac-card" id="pacCard">
+        <div class="pac-name" id="pacNameBig">—</div>
+        <div class="chips" id="pacChips"><!-- chips de dados entram aqui --></div>
+      </div>
+
       <div class="toolbar">
         <button id="btnAtualizar" class="btn sec">Atualizar</button>
-        <span id="resume" class="tag">—</span>
+        <span id="resume" class="chip">—</span>
       </div>
 
       <h2>Seus testes liberados</h2>
@@ -96,74 +79,60 @@
   </div>
 
 <script>
-/** ===========================
- *  CONFIG
- *  =========================== */
-const SHEETDB_BASE = "https://sheetdb.io/api/v1/8pmdh33s9fvy8"; // SheetDB da sua planilha
-const SHEETS = { TESTS:"Tests", PATIENTS:"Patients" };
+/* ===========================
+   CONFIG
+   =========================== */
+const SHEETDB_BASE = "https://sheetdb.io/api/v1/8pmdh33s9fvy8";
+const SHEETS = { TESTS:"Tests", PATIENTS:"Patients", TOKENS:"LinkTokens" };
 
-// ⚙️ Fallbacks globais (usados quando não houver URL na planilha nem no mapa JS)
+// Fallbacks/mapeamentos de URLs
 const BASE_TEST_URL = "https://seu-dominio.com/testes"; // Preencher -> BASE_TEST_URL/<code>
 const BASE_FORM_URL = "https://seu-dominio.com/form";   // Enviar link -> BASE_FORM_URL/<code>
+const TEST_URLS  = { /* "BAI": "https://seus-formularios.com/bai" */ };
+const SHARE_URLS = { /* "BAI": "https://seus-formularios.com/bai_share" */ };
 
-// ✅ Mapas opcionais no JS (sobrescrevem o BASE_* se preenchidos)
-// Ex.: TEST_URLS["IHS"] = "https://meu-form.com/ihs";
-const TEST_URLS = {
-  "BAI": "www.google.com",
-  // "BAI": "https://outro.com/bai"
-};
-const SHARE_URLS = {
-  // "IHS": "https://seu-site.com/ihs_share"
-};
-
-// incluir cpf/nasc como query nos links (pode desligar)
-const APPEND_ID_PARAMS = true;
+// parâmetros que vão junto no link do teste
+const APPEND_ID_PARAMS   = true;
 const INCLUDE_NASC_PARAM = true;
 
-const TEST_PREFIX = "";         // se usar prefixo nas colunas de teste na Patients
-const DONE_SUFFIX = "_FEITO";   // coluna opcional <CODE>_FEITO = sim
+const TEST_PREFIX = "";       // se usar prefixo nas colunas de teste na Patients
+const DONE_SUFFIX = "_FEITO"; // coluna opcional <CODE>_FEITO = "sim"
 const DEFAULT_TARGETS = ["pais","professores","segunda_fonte","heterorrelato"];
 
-/** ===========================
- *  HELPERS
- *  =========================== */
+/* ===========================
+   HELPERS
+   =========================== */
 const $ = s => document.querySelector(s);
-const el = (tag, opts={}) => Object.assign(document.createElement(tag), opts);
 const onlyDigits = s => (s||"").replace(/\D+/g,"");
-const toISO = s => s || "";
-
-function validaCPF(cpf){
-  cpf = onlyDigits(cpf);
-  if(!cpf || cpf.length!==11 || /^(\d)\1+$/.test(cpf)) return false;
-  let soma=0, resto;
-  for(let i=1;i<=9;i++) soma += parseInt(cpf.substring(i-1,i))*(11-i);
-  resto = (soma*10)%11; if(resto===10||resto===11) resto=0;
-  if(resto !== parseInt(cpf.substring(9,10))) return false;
-  soma=0;
-  for(let i=1;i<=10;i++) soma += parseInt(cpf.substring(i-1,i))*(12-i);
-  resto = (soma*10)%11; if(resto===10||resto===11) resto=0;
-  return resto === parseInt(cpf.substring(10,11));
-}
+const qs = k => new URLSearchParams(location.search).get(k) || "";
 function setMsg(box, text, type="ok"){
   box.textContent = text;
   box.className = "msg "+type;
   text ? box.classList.remove("hidden") : box.classList.add("hidden");
 }
+function formatCPF(cpfDigits){
+  const d = onlyDigits(cpfDigits||"").padEnd(11,"");
+  if(d.length<11) return cpfDigits||"";
+  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9,11)}`;
+}
+function formatDateBR(iso){
+  if(!iso) return "";
+  const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`;
+}
 function buildUrl(base, params){
   try{
-    const u = new URL(base, window.location.href);
+    const u = new URL(base, location.href);
     Object.entries(params||{}).forEach(([k,v])=> u.searchParams.set(k, v));
     return u.toString();
   }catch(_){
-    // base pode ser relativo; faz manual
     const q = Object.entries(params||{}).map(([k,v])=>`${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
     return base + (base.includes("?") ? "&" : "?") + q;
   }
 }
 
-/** ===========================
- *  SHEETDB
- *  =========================== */
+/* ===========================
+   SHEETDB
+   =========================== */
 async function sheetSearch(sheet, params){
   const usp = new URLSearchParams(params);
   const url = `${SHEETDB_BASE}/search?sheet=${encodeURIComponent(sheet)}&${usp.toString()}`;
@@ -172,68 +141,105 @@ async function sheetSearch(sheet, params){
   return r.json();
 }
 
-/** ===========================
- *  ESTADO
- *  =========================== */
-let patient = null;        // linha de Patients
-let testsCatalog = [];     // [{code,label,order,shareable,targets[],form_url,share_url}...]
+/* ===========================
+   ESTADO
+   =========================== */
+let patient = null;    // linha Patients
+let testsCatalog = []; // catálogo Tests
 
-/** ===========================
- *  LOGIN
- *  =========================== */
-$("#btnEntrar").addEventListener("click", login);
+/* ===========================
+   TOKEN LOGIN
+   =========================== */
+(async function autoLoginByToken(){
+  const token = qs("token");
+  const status = $("#statusBox");
+  if(!token){
+    setMsg(status, "Link inválido: token ausente. Solicite um novo link ao consultório.", "err");
+    return;
+  }
+  try{
+    // 1) validar token e obter CPF
+    const rows = await sheetSearch(SHEETS.TOKENS, { token });
+    if(!rows || !rows.length) throw new Error("Token inválido ou não encontrado.");
+    const t = rows[0];
+
+    // regras básicas (opcionais: ajuste conforme colunas)
+    const disabled = String(t.disabled||"não").toLowerCase()==="sim";
+    const expired  = t.expires_at && (new Date(t.expires_at) < new Date());
+    if(disabled || expired) throw new Error("Token expirado ou desativado.");
+
+    const cpf = onlyDigits(t.cpf||"");
+    if(!cpf) throw new Error("Token sem CPF vinculado.");
+
+    // 2) buscar paciente apenas por CPF
+    const found = await sheetSearch(SHEETS.PATIENTS, { cpf });
+    if(!found || !found.length) throw new Error("Paciente não encontrado. Contate o consultório.");
+    patient = found[0];
+
+    // 3) carregar catálogo e renderizar
+    await loadTests();
+    fillPatientHeader();
+    renderTests();
+
+    // mostrar app
+    setMsg(status, "");
+    $("#viewApp").classList.remove("hidden");
+    $("#btnSair").classList.remove("hidden");
+  }catch(e){
+    setMsg(status, e.message || "Erro ao acessar. Tente novamente.", "err");
+    console.error(e);
+  }
+})();
+
 $("#btnSair").addEventListener("click", ()=>{
   patient=null; testsCatalog=[];
-  $("#cpf").value=""; $("#nasc").value="";
   $("#testsGrid").innerHTML="";
   $("#resume").textContent="—";
   $("#pacNomeSpan").textContent="Paciente";
+  $("#pacNameBig").textContent="—";
+  $("#pacChips").innerHTML="";
   $("#viewApp").classList.add("hidden");
-  $("#btnSair").classList.add("hidden");
-  $("#viewLogin").classList.remove("hidden");
-});
-$("#cpf").addEventListener("input", (e)=>{
-  // máscara leve
-  const d = onlyDigits(e.target.value).slice(0,11);
-  const p = [d.slice(0,3), d.slice(3,6), d.slice(6,9), d.slice(9,11)].filter(Boolean);
-  e.target.value = p.length<=1? (p[0]||"") : p.length===2? `${p[0]}.${p[1]}` : p.length===3? `${p[0]}.${p[1]}.${p[2]}` : `${p[0]}.${p[1]}.${p[2]}-${p[3]}`;
+  setMsg($("#statusBox"), "Sessão encerrada. Feche o navegador.", "ok");
 });
 
-async function login(){
-  const cpf = onlyDigits($("#cpf").value);
-  const nasc = toISO($("#nasc").value);
-  const msg = $("#loginMsg");
-  if(!validaCPF(cpf)) return setMsg(msg, "CPF inválido.", "err");
-  if(!nasc) return setMsg(msg, "Informe a data de nascimento.", "warn");
-  setMsg(msg, "Verificando…", "ok");
-  try{
-    const found = await sheetSearch(SHEETS.PATIENTS, { cpf, data_nascimento: nasc });
-    if(!found || !found.length) return setMsg(msg, "Dados não encontrados. Confira CPF e data.", "err");
-    patient = found[0];
-    setMsg(msg, "");
-    $("#pacNomeSpan").textContent = patient.nome || "Paciente";
-    $("#viewLogin").classList.add("hidden");
-    $("#viewApp").classList.remove("hidden");
-    $("#btnSair").classList.remove("hidden");
-    await loadTests();
-    renderTests();
-  }catch(e){
-    setMsg(msg, "Erro ao acessar. Tente novamente.", "err");
-    console.error(e);
-  }
-}
-
-/** ===========================
- *  TESTES
- *  =========================== */
 $("#btnAtualizar").addEventListener("click", async ()=>{
   if(!patient) return;
-  const found = await sheetSearch(SHEETS.PATIENTS, { cpf: patient.cpf, data_nascimento: patient.data_nascimento });
+  const cpf = onlyDigits(patient.cpf);
+  const found = await sheetSearch(SHEETS.PATIENTS, { cpf });
   if(found && found.length) patient = found[0];
   await loadTests(true);
+  fillPatientHeader();
   renderTests();
 });
 
+/* ===========================
+   DADOS DO PACIENTE (DESTAQUE)
+   =========================== */
+function fillPatientHeader(){
+  if(!patient) return;
+  const nome = (patient.nome||"Paciente").trim();
+  $("#pacNomeSpan").textContent = nome;
+  $("#pacNameBig").textContent  = nome;
+
+  const chips = $("#pacChips");
+  chips.innerHTML = "";
+  const addChip = (label, val) => {
+    if(!val) return;
+    const sp = document.createElement("span");
+    sp.className="chip";
+    sp.innerHTML = `<b>${label}:</b> ${val}`;
+    chips.appendChild(sp);
+  };
+
+  addChip("CPF", formatCPF(patient.cpf));
+  addChip("Nascimento", formatDateBR(patient.data_nascimento));
+  addChip("E-mail", (patient.email||"").trim());
+  addChip("WhatsApp", (patient.whatsapp||"").trim());
+}
+
+/* ===========================
+   TESTES
+   =========================== */
 async function loadTests(skipFetch){
   if(!skipFetch){
     const rows = await sheetSearch(SHEETS.TESTS, {active:"sim"});
@@ -242,20 +248,22 @@ async function loadTests(skipFetch){
       const label = (r.label||code).trim();
       const order = Number(r.order||9999);
       const shareable = String(r.shareable||"não").trim().toLowerCase()==="sim";
-      // alvos
-      let targets = String(r.targets||"").trim();
-      const targetsArr = (targets ? targets.split(/[;,]+/).map(s=>s.trim().toLowerCase()).filter(Boolean) : []);
-      // urls (podem vir da planilha)
-      const form_url = (r.form_url||"").trim();
+      // alvos que podem receber link compartilhável
+      const targetsArr = String(r.targets||"")
+        .split(/[;,]+/)
+        .map(s=>s.trim().toLowerCase())
+        .filter(Boolean);
+      const form_url  = (r.form_url||"").trim();
       const share_url = (r.share_url||"").trim();
       return {
         code, label, order, shareable,
-        targets: (shareable?(targetsArr.length?targetsArr:DEFAULT_TARGETS):[]),
+        targets: (shareable ? (targetsArr.length?targetsArr:DEFAULT_TARGETS) : []),
         form_url, share_url
       };
     }).filter(t=>t.code).sort((a,b)=> a.order-b.order || a.label.localeCompare(b.label));
   }
-  // resumo rápido
+
+  // resumo
   const allowed = testsCatalog.filter(t => testAllowed(t));
   const cJa  = allowed.filter(t => testStatus(t)==="ja").length;
   const cOk  = allowed.filter(t => testStatus(t)==="preenchido").length;
@@ -275,15 +283,18 @@ function testStatus(t){
   return done ? "preenchido" : "ja";
 }
 
-// resolve a URL final (planilha -> mapa JS -> base)
-function resolveFillUrl(t, cpf, nasc){
+// resolve URLs
+function resolveFillUrl(t){
+  const cpf  = onlyDigits(patient?.cpf||"");
+  const nasc = patient?.data_nascimento || "";
   const base = t.form_url || TEST_URLS[t.code] || `${BASE_TEST_URL}/${encodeURIComponent(t.code)}`;
   if(!APPEND_ID_PARAMS) return base;
   const params = { cpf };
-  if(INCLUDE_NASC_PARAM) params.nasc = nasc;
+  if(INCLUDE_NASC_PARAM && nasc) params.nasc = nasc;
   return buildUrl(base, params);
 }
-function resolveShareUrl(t, cpf, target){
+function resolveShareUrl(t, target){
+  const cpf  = onlyDigits(patient?.cpf||"");
   const base = t.share_url || SHARE_URLS[t.code] || `${BASE_FORM_URL}/${encodeURIComponent(t.code)}`;
   const params = { cpf, source: target };
   return buildUrl(base, params);
@@ -292,50 +303,68 @@ function resolveShareUrl(t, cpf, target){
 function renderTests(){
   const grid = $("#testsGrid");
   grid.innerHTML = "";
-  if(!patient){ grid.innerHTML = "<p class='muted'>Nenhum dado carregado.</p>"; return; }
+  if(!patient){ grid.innerHTML = "<p class='msg warn'>Nenhum dado carregado.</p>"; return; }
 
   const list = testsCatalog.filter(t => testAllowed(t));
-  if(!list.length){ grid.innerHTML = "<p class='muted'>Você ainda não possui testes liberados.</p>"; return; }
-
-  const cpf = onlyDigits(patient.cpf||"");
-  const nasc = patient.data_nascimento;
+  if(!list.length){ grid.innerHTML = "<p class='msg warn'>Você ainda não possui testes liberados.</p>"; return; }
 
   for(const t of list){
     const st = testStatus(t);
 
-    const card = el("div", {className:"test"});
+    const card = document.createElement("div");
+    card.className = "test";
 
-    const head = el("div", {className:"test-head"});
-    const titleWrap = el("div", {style:"min-width:0"});
-    const title = el("div", {className:"test-title", textContent:t.label});
-    const code  = el("div", {className:"test-code", textContent:t.code});
-    titleWrap.appendChild(title); titleWrap.appendChild(code);
+    const head = document.createElement("div");
+    head.className = "test-head";
 
-    const tag = el("span", {className:"tag "+(st==="preenchido"?"preenchido":"ja"), textContent:(st==="preenchido"?"preenchido":"Pendente!")});
+    const titleWrap = document.createElement("div");
+    const title = document.createElement("div");
+    title.className = "test-title";
+    title.textContent = t.label;
+    const code = document.createElement("div");
+    code.className = "test-code";
+    code.textContent = t.code;
+    titleWrap.appendChild(title);
+    titleWrap.appendChild(code);
+
+    const tag = document.createElement("span");
+    tag.className = "tag "+(st==="preenchido"?"preenchido":"ja");
+    tag.textContent = (st==="preenchido" ? "preenchido" : "Pendente!");
 
     head.appendChild(titleWrap);
     head.appendChild(tag);
     card.appendChild(head);
 
-    const actions = el("div", {className:"toolbar"});
+    const actions = document.createElement("div");
+    actions.className = "toolbar";
 
     if(st==="preenchido"){
-      const btnDone = el("button", {className:"btn sec", textContent:"Preenchido", disabled:true});
+      const btnDone = document.createElement("button");
+      btnDone.className = "btn sec";
+      btnDone.textContent = "Preenchido";
+      btnDone.disabled = true;
       actions.appendChild(btnDone);
     }else{
-      const fillUrl = resolveFillUrl(t, cpf, nasc);
-      const btnPre = el("button", {className:"btn ok", textContent:"Preencher"});
-      btnPre.addEventListener("click", ()=> window.open(fillUrl, "_blank"));
+      const btnPre = document.createElement("button");
+      btnPre.className = "btn ok";
+      btnPre.textContent = "Preencher";
+      btnPre.addEventListener("click", ()=> window.open(resolveFillUrl(t), "_blank"));
       actions.appendChild(btnPre);
     }
 
     if(t.shareable){
-      const btnShare = el("button", {className:"btn sec", textContent:"Enviar link"});
+      const btnShare = document.createElement("button");
+      btnShare.className = "btn sec";
+      btnShare.textContent = "Enviar link";
       btnShare.addEventListener("click", async ()=>{
         const tgt = await chooseTarget(t.targets);
         if(!tgt) return;
-        const shareUrl = resolveShareUrl(t, cpf, tgt);
-        const ok = await navigator.clipboard.writeText(shareUrl).then(()=>true).catch(()=>false);
+        const shareUrl = resolveShareUrl(t, tgt);
+        let ok=false;
+        try{
+          await navigator.clipboard.writeText(shareUrl);
+          ok=true;
+        }catch(_){}
         alert(ok ? "Link copiado! Cole no WhatsApp." : shareUrl);
       });
       actions.appendChild(btnShare);
@@ -346,7 +375,7 @@ function renderTests(){
   }
 }
 
-// diálogo simples para escolher o alvo do link
+// prompt simples para escolher alvo do link
 function chooseTarget(targets){
   return new Promise((resolve)=>{
     if(!targets || !targets.length){ resolve(null); return; }
