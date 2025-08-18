@@ -1,87 +1,133 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>BAI – Inventário de Ansiedade de Beck</title>
-<style>
-  :root{--bg:#0f172a;--card:#111827;--line:#1f2937;--text:#e5e7eb;--muted:#94a3b8;--pri:#4f46e5;--ok:#22c55e;--err:#ef4444}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto}
-  .wrap{max-width:960px;margin:24px auto;padding:0 16px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
-  h1{margin:0 0 6px;font-size:1.35rem}
-  .muted{color:var(--muted)}
-  .grid-info{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0 6px}
-  @media(max-width:720px){.grid-info{grid-template-columns:1fr}}
-  .info-item{background:#0b1220;border:1px solid var(--line);border-radius:10px;padding:10px}
-  .info-item b{display:block;margin-bottom:4px;color:#cbd5e1}
-  .q{border:1px solid var(--line);border-radius:12px;padding:12px;background:#0b1220;margin-top:10px}
-  .q h3{margin:0 0 8px;font-size:1rem}
-  .opts{display:flex;flex-wrap:wrap;gap:10px}
-  .opt{display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid var(--line);border-radius:10px}
-  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--pri);border:none;color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer}
-  .btn.ok{background:var(--ok)}
-  .btn:disabled{opacity:.6;cursor:not-allowed}
-  .msg{margin:10px 0;padding:10px;border-radius:8px}
-  .okbox{background:#052e1a;border:1px solid #114d2a;color:#b3f7c1}
-  .errbox{background:#3b0d0d;border:1px solid #5b1919;color:#ffd0d0}
-  .warnbox{background:#3a2903;border:1px solid #5c4307;color:#ffe6b0}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Área do Paciente — Integrada Neuropsicologia</title>
+  <meta name="description" content="Portal do paciente para acessar e preencher testes liberados."/>
+  <style>
+    :root{
+      --bg:#0e1625; --card:#14213b; --line:#2b3f66;
+      --text:#f8fafc; --muted:#cbd5e1;
+      --pri:#6d28d9; --ok:#10b981; --warn:#f59e0b; --err:#ef4444;
+      --chip:#0b1220;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+    .wrap{max-width:980px;margin:20px auto;padding:0 16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px}
+    .brand{font-weight:700;overflow-wrap:anywhere}
+    h1,h2{margin:0 0 12px}
+    h2{font-size:1.05rem;color:var(--muted)}
+    .btn{display:inline-flex;align-items:center;gap:10px;background:var(--pri);border:none;color:#fff;padding:12px 16px;border-radius:12px;cursor:pointer;font-weight:600}
+    .btn.sec{background:#334155}
+    .btn.ok{background:var(--ok)}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+    .msg{margin:12px 0;padding:12px;border-radius:10px}
+    .okbox{background:#06351f;border:1px solid #0e6c45;color:#c8ffe3}
+    .warnbox{background:#3a2903;border:1px solid #885e09;color:#ffe6b0}
+    .errbox{background:#3b0d0d;border:1px solid #7f1d1d;color:#ffd5d5}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:10px}
+    @media (max-width:560px){ .grid{grid-template-columns:1fr} }
+    .test{background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+    .test-head{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;min-width:0}
+    @media (max-width:560px){ .test-head{grid-template-columns:1fr} }
+    .test-title{font-weight:700;overflow-wrap:anywhere;word-break:break-word;min-width:0}
+    .test-code{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
+    .tag{justify-self:start;font-size:.75rem;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:#dbeafe;white-space:nowrap}
+    .tag.ja{background:#0b3d2a;border-color:#0e6c45}
+    .tag.preenchido{background:#0a2b45;border-color:#145a86}
+    .hidden{display:none !important}
+
+    .grid-info{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0 6px}
+    @media (max-width:720px){ .grid-info{grid-template-columns:1fr} }
+    .info{background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:12px;padding:12px}
+    .info b{display:block;margin-bottom:4px;color:#e2e8f0}
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <h1>BAI – Inventário de Ansiedade de Beck</h1>
-    <p class="muted" id="intro">Marque o quanto cada sintoma lhe incomodou na <strong>última semana</strong>, incluindo hoje.</p>
-
-    <!-- Dados do paciente (via token) -->
-    <div id="info" class="grid-info" style="display:none"></div>
-
-    <div id="alert" class="msg" style="display:none"></div>
-
-    <form id="form" style="margin-top:14px; display:none;">
-      <div id="qs"></div>
-      <div style="margin-top:14px">
-        <button id="btnSubmit" class="btn ok" type="submit">Enviar respostas</button>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Integrada Neuropsicologia — Área do Paciente</div>
+      <div>
+        <button id="btnSair" class="btn sec hidden">Sair</button>
       </div>
-      <div id="msg" class="msg" style="display:none"></div>
-    </form>
+    </div>
+
+    <!-- AVISOS -->
+    <div id="msg" class="msg hidden"></div>
+
+    <!-- APP -->
+    <section id="viewApp" class="card hidden">
+      <h1>Olá, <span id="pacNomeSpan">Paciente</span></h1>
+
+      <!-- Dados do paciente -->
+      <div class="grid-info" id="pacInfo" style="margin:10px 0 6px;"></div>
+
+      <div class="toolbar">
+        <button id="btnAtualizar" class="btn sec">Atualizar</button>
+        <span id="resume" class="tag">—</span>
+      </div>
+
+      <h2>Seus testes liberados</h2>
+      <div id="testsGrid" class="grid" aria-live="polite"></div>
+    </section>
   </div>
-</div>
 
 <script>
-/* ===== CONFIG ===== */
+/* ===========================
+ * CONFIG
+ * =========================== */
 const SHEETDB_BASE = "https://sheetdb.io/api/v1/8pmdh33s9fvy8";
-const SHEETS = { PATIENTS:"Patients", SCORES:"Scores_BAI", TOKENS:"LinkTokens" };
-const CODE = "BAI";
-const PORTAL_URL = "https://integradaneuropsicologia.github.io/formularios/";
+const SHEETS = { TESTS:"Tests", PATIENTS:"Patients", TOKENS:"LinkTokens" };
 
-/* ===== HELPERS ===== */
+/* Fallbacks (se a aba Tests não trouxer URL) */
+const BASE_TEST_URL = "https://integradaneuropsicologia.github.io/formularios"; // abre BASE_TEST_URL/<code>.html
+const BASE_FORM_URL = "https://integradaneuropsicologia.github.io/formularios/share";
+
+/* Mapa opcional para sobrescrever URLs por código (opcional) */
+const TEST_URLS = {
+  // "BAI": "https://integradaneuropsicologia.github.io/formularios/bai.html",
+};
+const SHARE_URLS = {
+  // "SRS2": "https://.../srs2-share.html"
+};
+
+/* Links de “Preencher” levam token; links de segunda-fonte NÃO levam token */
+const APPEND_TOKEN_PARAM = true;
+const DEFAULT_TARGETS = ["pais","professores","segunda_fonte","heterorrelato"];
+
+const TEST_PREFIX = "";       // se tiver prefixo nas colunas da Patients
+const DONE_SUFFIX  = "_FEITO";
+
+/* ===========================
+ * HELPERS
+ * =========================== */
 const $ = s => document.querySelector(s);
+const el = (tag, opts={}) => Object.assign(document.createElement(tag), opts);
 const onlyDigits = s => (s||"").replace(/\D+/g,"");
 const qs = k => new URLSearchParams(location.search).get(k) || "";
-function setBox(el, text, type="ok"){
-  el.textContent = text;
-  el.className = "msg " + (type==="ok"?"okbox":type==="warn"?"warnbox":"errbox");
-  el.style.display = text ? "block" : "none";
+
+function setMsg(text="", type="ok"){
+  const b = $("#msg");
+  b.textContent = text;
+  b.className = "msg " + (type==="ok"?"okbox":type==="warn"?"warnbox":"errbox");
+  text ? b.classList.remove("hidden") : b.classList.add("hidden");
 }
-async function GET(url){ const r=await fetch(url); if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); }
 async function sheetSearch(sheet, params){
   const usp = new URLSearchParams(params);
-  return GET(`${SHEETDB_BASE}/search?sheet=${encodeURIComponent(sheet)}&${usp.toString()}`);
-}
-async function sheetCreate(sheet, row){
-  const r = await fetch(`${SHEETDB_BASE}?sheet=${encodeURIComponent(sheet)}`, {
-    method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ data:[row] })
-  });
-  if(!r.ok) throw new Error(await r.text()); return r.json();
-}
-async function sheetPatchBy(sheet, column, value, data){
-  const r = await fetch(`${SHEETDB_BASE}/${encodeURIComponent(column)}/${encodeURIComponent(value)}?sheet=${encodeURIComponent(sheet)}`, {
-    method:"PATCH", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ data })
-  });
-  if(!r.ok) throw new Error(await r.text()); return r.json();
+  const url = `${SHEETDB_BASE}/search?sheet=${encodeURIComponent(sheet)}&${usp.toString()}`;
+  const r = await fetch(url);
+  if(!r.ok) throw new Error("Falha ao buscar em "+sheet);
+  return r.json();
 }
 function maskCPF(cpf){
   const d = onlyDigits(cpf||"");
@@ -90,158 +136,224 @@ function maskCPF(cpf){
 }
 function fmtDateISO(iso){
   if(!iso) return "";
-  const [y,m,d] = iso.split("-"); if(!y||!m||!d) return iso;
-  return `${d}/${m}/${y}`;
+  const [y,m,d] = iso.split("-");
+  return (y && m && d) ? `${d}/${m}/${y}` : iso;
+}
+function buildUrl(base, params){
+  try{
+    const u = new URL(base, location.href);
+    Object.entries(params||{}).forEach(([k,v])=> u.searchParams.set(k, v));
+    return u.toString();
+  }catch(_){
+    const q = Object.entries(params||{}).map(([k,v])=>`${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
+    return base + (base.includes("?") ? "&" : "?") + q;
+  }
 }
 
-/* ===== ITENS/OPÇÕES ===== */
-const ITEMS = [
-  "Dormência ou formigamento.","Sensação de calor.","Tremores nas pernas.","Incapaz de relaxar.",
-  "Medo que aconteça o pior.","Atordoado ou tonto.","Palpitação ou aceleração do coração.","Sem equilíbrio.",
-  "Aterrorizado.","Nervoso.","Sensação de sufocação.","Tremores nas mãos.","Trêmulo.",
-  "Medo de perder o controle.","Dificuldade de respirar.","Medo de morrer.","Assustado.",
-  "Indigestão ou desconforto no abdômen.","Sensação de desmaio.","Rosto afogueado.","Suor (não devido ao calor)."
-];
-const CHOICES = [
-  {label:"Absolutamente não", value:0},
-  {label:"Levemente",         value:1},
-  {label:"Moderadamente",     value:2},
-  {label:"Gravemente",        value:3},
-];
-function categoria(total){
-  if(total <= 10) return "mínimo";
-  if(total <= 19) return "leve";
-  if(total <= 30) return "moderada";
-  return "severa";
-}
-function renderQuestions(){
-  const host = $("#qs"); host.innerHTML="";
-  ITEMS.forEach((text, idx)=>{
-    const qn = String(idx+1).padStart(2,"0");
-    const wrap = document.createElement("div");
-    wrap.className="q";
-    wrap.innerHTML = `<h3>${idx+1}. ${text}</h3>`;
-    const opts = document.createElement("div"); opts.className="opts";
-    CHOICES.forEach(c=>{
-      const id=`q${qn}_${c.value}`;
-      const lab=document.createElement("label"); lab.className="opt";
-      lab.innerHTML = `<input type="radio" name="q${qn}" id="${id}" value="${c.value}" required><span>${c.label}</span>`;
-      opts.appendChild(lab);
-    });
-    wrap.appendChild(opts); host.appendChild(wrap);
-  });
-}
-
-/* ===== ESTADO ===== */
+/* ===========================
+ * ESTADO
+ * =========================== */
 let TOKEN = "";
-let PAT = null;  // linha do Patients
-let CPF = "";    // do token
-let sending = false;
+let patient = null;
+let testsCatalog = []; // {code,label,order,shareable,targets,form_url,share_url}
 
-/* ===== BOOT POR TOKEN ===== */
+/* ===========================
+ * BOOT VIA TOKEN
+ * =========================== */
 (async function boot(){
   try{
     TOKEN = qs("token");
-    if(!TOKEN){ setBox($("#alert"), "Link inválido (sem token). Solicite um novo link ao consultório.", "err"); return; }
+    if(!TOKEN){ setMsg("Link inválido (sem token). Solicite um novo link ao consultório.", "err"); return; }
 
-    // 1) token -> cpf (e checa validade)
+    // 1) validar token e obter CPF
     const trows = await sheetSearch(SHEETS.TOKENS, { token: TOKEN });
-    if(!trows.length) throw new Error("Token inválido ou expirado.");
+    if(!trows || !trows.length) throw new Error("Token inválido ou expirado.");
     const t = trows[0];
-    const disabled = String(t.disabled||"não").toLowerCase()==="sim";
-    const expired = t.expires_at && (new Date(t.expires_at) < new Date());
-    if(disabled || expired) throw new Error("Token desativado/expirado. Peça um novo link.");
-    CPF = onlyDigits(t.cpf||"");
-    if(!CPF) throw new Error("Token sem CPF vinculado.");
+    if(String(t.disabled||"não").toLowerCase()==="sim") throw new Error("Token desativado. Peça um novo link.");
+    if(t.expires_at && new Date(t.expires_at) < new Date()) throw new Error("Token expirado. Peça um novo link.");
+    const cpf = onlyDigits(t.cpf||"");
+    if(!cpf) throw new Error("Token sem CPF vinculado.");
 
-    // 2) carrega paciente
-    const prows = await sheetSearch(SHEETS.PATIENTS, { cpf: CPF });
-    if(!prows.length) throw new Error("Paciente não encontrado.");
-    PAT = prows[0];
+    // 2) paciente
+    const prows = await sheetSearch(SHEETS.PATIENTS, { cpf });
+    if(!prows || !prows.length) throw new Error("Paciente não encontrado.");
+    patient = prows[0];
 
-    // 3) checa se BAI está liberado
-    const liberado = String(PAT[CODE]||"").toLowerCase()==="sim";
-    if(!liberado){ throw new Error("Este teste não está liberado para você. Fale com a clínica."); }
+    // 3) catálogo de testes
+    await loadTests();
 
-    // 4) bloqueio se já enviado (flag FEITO OU registro em Scores)
-    const feitoFlag = String(PAT[`${CODE}_FEITO`]||"").toLowerCase()==="sim";
-    const byToken = await sheetSearch(SHEETS.SCORES, { token: TOKEN, code: CODE }).catch(()=>[]);
-    const byCpf   = await sheetSearch(SHEETS.SCORES, { cpf: CPF, code: CODE }).catch(()=>[]);
-    if(feitoFlag || (byToken && byToken.length) || (byCpf && byCpf.length)){
-      setBox($("#alert"), "Você já preencheu este formulário. Redirecionando…", "ok");
-      setTimeout(()=>{ window.location.href = PORTAL_URL; }, 1200);
-      return;
-    }
+    // 4) render
+    $("#pacNomeSpan").textContent = patient.nome || "Paciente";
+    renderPatientInfo();
+    renderTests();
+    $("#viewApp").classList.remove("hidden");
+    $("#btnSair").classList.remove("hidden");
+    setMsg(""); // apaga avisos
 
-    // 5) mostra dados do paciente
-    const info = $("#info"); info.style.display="grid";
-    info.innerHTML = `
-      <div class="info-item"><b>Nome</b><div>${PAT.nome||"-"}</div></div>
-      <div class="info-item"><b>CPF</b><div>${maskCPF(PAT.cpf)}</div></div>
-      <div class="info-item"><b>Nascimento</b><div>${fmtDateISO(PAT.data_nascimento)}</div></div>
-    `;
-
-    // 6) mostra o formulário
-    renderQuestions();
-    $("#form").style.display = "block";
-    setBox($("#alert"), "Identificação confirmada. Preencha todas as questões.", "ok");
-    setTimeout(()=> setBox($("#alert"), "", "ok"), 1000);
-  }catch(err){
-    console.error(err);
-    setBox($("#alert"), err.message || "Falha ao carregar. Tente novamente mais tarde.", "err");
+  }catch(e){
+    console.error(e);
+    setMsg(e.message || "Falha ao abrir sua área. Tente novamente mais tarde.", "err");
   }
 })();
 
-/* ===== SUBMIT (trava anti-duplo) ===== */
-$("#form").addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  if(sending) return;
-  sending = true;
-  const btn = $("#btnSubmit");
-  const msg = $("#msg");
-  btn.disabled = true;
-  const original = btn.textContent;
-  btn.textContent = "Enviando…";
+$("#btnSair").addEventListener("click", ()=>{
+  // remove o token da barra e recarrega
+  history.replaceState({}, "", location.pathname);
+  location.reload();
+});
 
+/* ===========================
+ * INFO DO PACIENTE
+ * =========================== */
+function renderPatientInfo(){
+  const g = $("#pacInfo");
+  g.innerHTML = "";
+  const info = [
+    ["Nome", patient.nome || "-"],
+    ["CPF",  maskCPF(patient.cpf)],
+    ["Nascimento", fmtDateISO(patient.data_nascimento)],
+    ["E-mail", patient.email || "-"],
+    ["WhatsApp", patient.whatsapp || "-"],
+  ];
+  for(const [k,v] of info){
+    const it = el("div",{className:"info"});
+    it.innerHTML = `<b>${k}</b><div>${v||"-"}</div>`;
+    g.appendChild(it);
+  }
+}
+
+/* ===========================
+ * TESTES
+ * =========================== */
+$("#btnAtualizar").addEventListener("click", async ()=>{
+  if(!patient) return;
   try{
-    if(!TOKEN || !PAT || !CPF){ throw new Error("Sessão inválida. Reabra o link recebido."); }
+    const prows = await sheetSearch(SHEETS.PATIENTS, { cpf: patient.cpf });
+    if(prows && prows.length) patient = prows[0];
+    await loadTests(true);
+    renderTests();
+    setMsg("Atualizado.", "ok");
+    setTimeout(()=>setMsg(""), 900);
+  }catch(_){ /* silencia */ }
+});
 
-    // coleta pontuação total
-    let total = 0;
-    for(let i=1;i<=21;i++){
-      const qn = String(i).padStart(2,"0");
-      const sel = document.querySelector(`input[name="q${qn}"]:checked`);
-      if(!sel){ throw new Error(`Responda a questão ${i}.`); }
-      total += Number(sel.value);
-    }
-    const cat = categoria(total);
+async function loadTests(skipFetch){
+  if(!skipFetch){
+    const rows = await sheetSearch(SHEETS.TESTS, { active:"sim" });
+    testsCatalog = rows.map(r=>{
+      const code = (r.code||"").trim();
+      const label = (r.label||code).trim();
+      const order = Number(r.order||9999);
+      const shareable = String(r.shareable||"não").trim().toLowerCase()==="sim";
+      const targetsArr = String(r.targets||"").split(/[;,]+/).map(s=>s.trim().toLowerCase()).filter(Boolean);
+      const form_url = (r.form_url||"").trim();
+      const share_url = (r.share_url||"").trim();
+      return {
+        code, label, order, shareable,
+        targets: (shareable ? (targetsArr.length?targetsArr:DEFAULT_TARGETS) : []),
+        form_url, share_url
+      };
+    }).filter(t=>t.code).sort((a,b)=> a.order-b.order || a.label.localeCompare(b.label));
+  }
+  const allowed = testsCatalog.filter(t => isAllowed(t));
+  const cJa  = allowed.filter(t => statusOf(t)==="ja").length;
+  const cOk  = allowed.filter(t => statusOf(t)==="preenchido").length;
+  $("#resume").textContent = `Liberados: ${allowed.length} • Em aberto: ${cJa} • Preenchidos: ${cOk}`;
+}
 
-    // salva apenas total + categoria
-    await sheetCreate(SHEETS.SCORES, {
-      result_id: `${TOKEN}_${CODE}_${Date.now()}`,
-      token: TOKEN,
-      cpf: CPF,
-      code: CODE,
-      source: "paciente",
-      submitted_at: new Date().toISOString(),
-      total,
-      categoria: cat
+function colFor(t){ return (TEST_PREFIX ? TEST_PREFIX + t.code : t.code); }
+function doneColFor(t){ return colFor(t) + DONE_SUFFIX; }
+function isAllowed(t){ return patient && String(patient[colFor(t)]||"").toLowerCase()==="sim"; }
+function statusOf(t){
+  if(!isAllowed(t)) return "oculto";
+  const done = String(patient[doneColFor(t)]||"").toLowerCase()==="sim";
+  return done ? "preenchido" : "ja";
+}
+
+/* URL para preencher: form_url > TEST_URLS > BASE_TEST_URL/<code>.html + ?token= */
+function resolveFillUrl(t){
+  const base =
+    t.form_url ||
+    TEST_URLS[t.code] ||
+    `${BASE_TEST_URL}/${encodeURIComponent(String(t.code||"").toLowerCase())}.html`;
+  return APPEND_TOKEN_PARAM ? buildUrl(base, { token: TOKEN }) : base;
+}
+
+/* URL de segunda-fonte: share_url > SHARE_URLS > BASE_FORM_URL/<code>.html + ?cpf=...&source=... (sem token) */
+function resolveShareUrl(t, target){
+  const base =
+    t.share_url ||
+    SHARE_URLS[t.code] ||
+    `${BASE_FORM_URL}/${encodeURIComponent(String(t.code||"").toLowerCase())}.html`;
+  return buildUrl(base, { cpf: onlyDigits(patient.cpf||""), source: target });
+}
+
+function renderTests(){
+  const grid = $("#testsGrid");
+  grid.innerHTML = "";
+  if(!patient){ grid.innerHTML = "<p class='muted'>Nenhum dado carregado.</p>"; return; }
+
+  const list = testsCatalog.filter(t => isAllowed(t));
+  if(!list.length){ grid.innerHTML = "<p class='muted'>Você ainda não possui testes liberados.</p>"; return; }
+
+  for(const t of list){
+    const st = statusOf(t);
+
+    const card = el("div", {className:"test"});
+    const head = el("div", {className:"test-head"});
+    const titleWrap = el("div", {style:"min-width:0"});
+    const title = el("div", {className:"test-title", textContent:t.label});
+    const code  = el("div", {className:"test-code", textContent:t.code});
+    titleWrap.appendChild(title); titleWrap.appendChild(code);
+
+    const tag = el("span", {
+      className:"tag "+(st==="preenchido"?"preenchido":"ja"),
+      textContent:(st==="preenchido"?"preenchido":"Pendente!")
     });
 
-    // marca FEITO
-    await sheetPatchBy(SHEETS.PATIENTS, "cpf", CPF, { [`${CODE}_FEITO`]: "sim" });
+    head.appendChild(titleWrap);
+    head.appendChild(tag);
+    card.appendChild(head);
 
-    setBox(msg, "Formulário preenchido. respostas enviadas.", "ok");
-    setTimeout(()=>{ window.location.href = PORTAL_URL; }, 1200);
+    const actions = el("div", {className:"toolbar"});
 
-  }catch(err){
-    console.error(err);
-    setBox(msg, err.message || "Falha ao enviar. Tente novamente.", "err");
-    sending = false;
-    btn.disabled = false;
-    btn.textContent = original;
+    if(st==="preenchido"){
+      actions.appendChild(el("button", {className:"btn sec", textContent:"Preenchido", disabled:true}));
+    }else{
+      const btnPre = el("button", {className:"btn ok", textContent:"Preencher"});
+      btnPre.addEventListener("click", ()=> window.open(resolveFillUrl(t), "_blank"));
+      actions.appendChild(btnPre);
+    }
+
+    if(t.shareable){
+      const btnShare = el("button", {className:"btn sec", textContent:"Enviar link"});
+      btnShare.addEventListener("click", async ()=>{
+        const tgt = await chooseTarget(t.targets);
+        if(!tgt) return;
+        const shareUrl = resolveShareUrl(t, tgt);
+        const ok = await navigator.clipboard.writeText(shareUrl).then(()=>true).catch(()=>false);
+        alert(ok ? "Link copiado! Cole no WhatsApp." : shareUrl);
+      });
+      actions.appendChild(btnShare);
+    }
+
+    card.appendChild(actions);
+    grid.appendChild(card);
   }
-});
+}
+
+/* diálogo simples para escolher o alvo do link */
+function chooseTarget(targets){
+  return new Promise((resolve)=>{
+    if(!targets || !targets.length){ resolve(null); return; }
+    const label = "Para quem é esse link?\n" + targets.map((t,i)=>`${i+1}) ${t}`).join("\n") + "\n\nDigite o número:";
+    const ans = prompt(label);
+    if(!ans) return resolve(null);
+    const idx = parseInt(ans,10)-1;
+    if(isNaN(idx) || idx<0 || idx>=targets.length) return resolve(null);
+    resolve(targets[idx]);
+  });
+}
 </script>
 </body>
 </html>
