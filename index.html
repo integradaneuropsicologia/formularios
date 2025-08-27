@@ -51,6 +51,14 @@
     @media (max-width:720px){ .grid-info{grid-template-columns:1fr} }
     .info{background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:12px;padding:12px}
     .info b{display:block;margin-bottom:4px;color:#e2e8f0}
+
+    /* chip "aguardando" */
+.tag.aguardando{
+  background:#3a2903;          /* mesmo tom do warnbox */
+  border-color:#885e09;
+  color:#ffe6b0;
+}
+
   </style>
 </head>
 <body>
@@ -302,18 +310,19 @@ function renderTests(){
   if(!list.length){ grid.innerHTML = "<p class='muted'>Você ainda não possui testes liberados.</p>"; return; }
 
   for(const t of list){
-    const st = statusOf(t);
+    const st = statusOf(t); // "preenchido" | "ja"
 
     const card = el("div", {className:"test"});
     const head = el("div", {className:"test-head"});
     const titleWrap = el("div", {style:"min-width:0"});
     const title = el("div", {className:"test-title", textContent:t.label});
-    const code  = el("div", {className:"test-code", textContent:t.code});
+    const code  = el("div", {className:"test-code",  textContent:t.code});
     titleWrap.appendChild(title); titleWrap.appendChild(code);
 
+    // tag inicial conforme status
     const tag = el("span", {
-      className:"tag "+(st==="preenchido"?"preenchido":"ja"),
-      textContent:(st==="preenchido"?"preenchido":"Pendente!")
+      className:"tag " + (st==="preenchido" ? "preenchido" : "ja"),
+      textContent:(st==="preenchido" ? "Preenchido" : (t.shareable ? "Aguardando envio" : "Pendente!"))
     });
 
     head.appendChild(titleWrap);
@@ -322,24 +331,43 @@ function renderTests(){
 
     const actions = el("div", {className:"toolbar"});
 
-    if(st==="preenchido"){
-      actions.appendChild(el("button", {className:"btn sec", textContent:"Preenchido", disabled:true}));
-    }else{
-      const btnPre = el("button", {className:"btn ok", textContent:"Preencher"});
-      btnPre.addEventListener("click", ()=> window.open(resolveFillUrl(t), "_blank"));
-      actions.appendChild(btnPre);
-    }
+    // === NOVA REGRA PARA SHAREABLE ===
+    if (t.shareable) {
+      if (st === "preenchido") {
+        // já concluído: botão desativado
+        actions.appendChild(el("button", {
+          className:"btn sec", textContent:"Preenchido", disabled:true
+        }));
+      } else {
+        // botão verde e copia o MESMO link do "Preencher"
+        const btnShare = el("button", {className:"btn ok", textContent:"Enviar link"});
+        btnShare.addEventListener("click", async ()=>{
+          const shareUrl = resolveFillUrl(t); // mesmo link do Preencher (com ?token=)
+          const ok = await navigator.clipboard.writeText(shareUrl).then(()=>true).catch(()=>false);
 
-    if(t.shareable){
-      const btnShare = el("button", {className:"btn sec", textContent:"Enviar link"});
-      btnShare.addEventListener("click", async ()=>{
-        const tgt = await chooseTarget(t.targets);
-        if(!tgt) return;
-        const shareUrl = resolveShareUrl(t, tgt);
-        const ok = await navigator.clipboard.writeText(shareUrl).then(()=>true).catch(()=>false);
-        alert(ok ? "Link copiado! Cole no WhatsApp." : shareUrl);
-      });
-      actions.appendChild(btnShare);
+          if (ok) {
+            // aviso no topo
+            setMsg(`Link copiado. Aguardando preenchimento de "${t.label}".`, "warn");
+            // altera a tag do card para "aguardando"
+            tag.textContent = "Aguardando preenchimento";
+            tag.className = "tag aguardando";
+            // some o aviso depois de alguns segundos (opcional)
+            setTimeout(()=>setMsg(""), 3500);
+          } else {
+            alert(shareUrl);
+          }
+        });
+        actions.appendChild(btnShare);
+      }
+    } else {
+      // === FLUXO NORMAL (NÃO SHAREABLE) ===
+      if (st === "preenchido") {
+        actions.appendChild(el("button", {className:"btn sec", textContent:"Preenchido", disabled:true}));
+      } else {
+        const btnPre = el("button", {className:"btn ok", textContent:"Preencher"});
+        btnPre.addEventListener("click", ()=> window.open(resolveFillUrl(t), "_blank"));
+        actions.appendChild(btnPre);
+      }
     }
 
     card.appendChild(actions);
@@ -362,3 +390,4 @@ function chooseTarget(targets){
 </script>
 </body>
 </html>
+
