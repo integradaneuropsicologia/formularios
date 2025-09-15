@@ -58,6 +58,9 @@
   border-color:#885e09;
   color:#ffe6b0;
 }
+.muted{ color: var(--muted); }
+.test-label{ font-weight:400; color:var(--text); opacity:.95 }
+
 
   </style>
 </head>
@@ -317,11 +320,13 @@ function renderTests(){
     const card = el("div", {className:"test"});
     const head = el("div", {className:"test-head"});
     const titleWrap = el("div", {style:"min-width:0"});
-    const title = el("div", {className:"test-title", textContent:t.label});
-    const code  = el("div", {className:"test-code",  textContent:t.code});
-    titleWrap.appendChild(title); titleWrap.appendChild(code);
+    
+    const code  = el("div", {className:"test-title", textContent:t.code});   // negrito
+    const label = el("div", {className:"test-label", textContent:t.label});  // normal
+    titleWrap.appendChild(code);
+    titleWrap.appendChild(label);
 
-    // tag inicial conforme status
+
     const tag = el("span", {
       className:"tag " + (st==="preenchido" ? "preenchido" : "ja"),
       textContent:(st==="preenchido" ? "Preenchido" : (t.shareable ? "Aguardando envio" : "Pendente!"))
@@ -392,5 +397,4 @@ function chooseTarget(targets){
 </script>
 </body>
 </html>
-
 
