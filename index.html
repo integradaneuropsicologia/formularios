@@ -197,7 +197,7 @@
 .legend .chip{ display:inline-flex; align-items:center; gap:6px; padding:2px 8px;
   border:1px solid var(--line); border-radius:999px; background:#0b1220; color:var(--muted); font-size:.8rem;
 }
-.legend .dot{ width:10px; height:10px; border-radius:50%; }
+.legend .dot{ width:15px; height:15px; border-radius:50%; }
 .legend .dot.paciente{    background:var(--src-paciente); }
 .legend .dot.pais{        background:var(--src-pais); }
 .legend .dot.professores{ background:var(--src-professores); }
@@ -226,6 +226,28 @@
 
 /* Botão dos formulários com a cor do "Profissional" */
 .btn-src-profissional{ background:var(--src-profissional) !important; color:#fff !important; }
+
+/* Faz o bloco de orientações chamar atenção */
+#respGuidance {
+  border:2px solid var(--warn);
+  box-shadow:0 0 10px rgba(245,158,11,.6), 0 0 30px rgba(245,158,11,.2);
+  animation:pulseWarn 1.25s ease-in-out infinite;
+}
+
+@keyframes pulseWarn {
+  0%,100% {
+    box-shadow:0 0 10px rgba(245,158,11,.7), 0 0 30px rgba(245,158,11,.25);
+  }
+  50% {
+    box-shadow:0 0 2px rgba(245,158,11,.2), 0 0 8px rgba(245,158,11,.05);
+  }
+}
+.resp-btn:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+  filter:grayscale(0.4);
+ 
+}
 
 
 </style>
@@ -256,19 +278,8 @@
         <span id="resume" class="tag">—</span>
       </div>
 
-      <div class="legend">
-      <span class="chip"><span class="dot paciente"></span> Paciente</span>
-      <span class="chip"><span class="dot pais"></span> Pais/Cuidadores</span>
-      <span class="chip"><span class="dot professores"></span> Professores</span>
-      <span class="chip"><span class="dot familiares"></span> Familiares/Amigos</span>
-      <span class="chip"><span class="dot profissional"></span> Profissional</span>
-    </div>
 
-      <h2>Quem vai responder?</h2>
-<div id="respondentsSection">
-  <div id="sourcesGrid" class="resp-grid" aria-live="polite"></div>
-
-  <div class="instructions" id="respGuidance">
+ <div class="instructions" id="respGuidance">
     <b>Orientações</b>
     <div class="muted" style="margin-top:6px">
       Cada pessoa deve responder <strong>apenas</strong> os formulários com a <strong>própria cor</strong>.
@@ -282,6 +293,18 @@
       <span class="chip"><span class="dot profissional"></span> Profissional</span>
     </div>
   </div>
+  
+
+
+      <h2>Quem vai responder?</h2>
+<div id="respondentsSection">
+  <div id="sourcesGrid" class="resp-grid" aria-live="polite"></div>
+
+     
+
+      
+
+  
 </div>
 
 <div id="testsSection" class="hidden">
@@ -332,11 +355,11 @@ let currentSource = null;           // 'paciente' | 'pais' | 'professores' | 'fa
 let currentSourceLabel = "—";
 
 const RESPONDENTS = [
-  { cls:'paciente',    label:'Paciente',           desc:'Autorrelato do próprio paciente.' },
-  { cls:'pais',        label:'Pais/Cuidadores',    desc:'Relatos dos responsáveis.' },
-  { cls:'professores', label:'Professores',        desc:'Informações da escola.' },
-  { cls:'familiares',  label:'Familiares/Amigos',  desc:'Quem convive e conhece bem o paciente.' },
-   { cls:'profissional',  label:'profissional',  desc:'Profissional que está realizando a avaliação.' },
+  { cls:'paciente',     label:'Paciente',           desc:'Paciente quem deve responder.' },
+  { cls:'pais',         label:'Pais/Cuidadores',    desc:'Pais/responsáveis é quem devem responder.' },
+  { cls:'professores',  label:'Professores',        desc:'Professores/pedagogos quem devem responder.' },
+  { cls:'familiares',   label:'Familiares/Amigos',  desc:'Familiares/amigos que o paciente escolher.' },
+  { cls:'profissional', label:'Profissional',       desc:'Preenchimento reservado ao profissional que está avaliando.' },
 ];
 
 
@@ -460,14 +483,24 @@ function renderPatientInfo(){
 $("#btnAtualizar").addEventListener("click", async ()=>{
   if(!patient) return;
   try{
+    // Recarrega dados atualizados do paciente
     const prows = await sheetSearch(SHEETS.PATIENTS, { cpf: patient.cpf });
     if(prows && prows.length) patient = prows[0];
+
+    // Recarrega lista de testes liberados / status
     await loadTests(true);
+
+    // Re-renderiza TANTO os cards de respondentes quanto a lista de testes atual
+    renderRespondentCards();
     renderTests();
+
     setMsg("Atualizado.", "ok");
     setTimeout(()=>setMsg(""), 900);
-  }catch(_){ /* silencia */ }
+  }catch(_){
+    // silêncio pra não travar a UX
+  }
 });
+
 
 async function loadTests(skipFetch){
   if(!skipFetch){
@@ -581,22 +614,58 @@ function renderRespondentCards(){
   const grid = document.getElementById("sourcesGrid");
   grid.innerHTML = "";
 
-  // conta quantos testes liberados por respondente
+  // 1. Pego todos os testes liberados pra este paciente
   const allowed = testsCatalog.filter(t => isAllowed(t));
-  const counts = { paciente:0, pais:0, professores:0, familiares:0, profissional:0 };
 
-  for(const t of allowed){
-    const s = normalizeSource(t.source).cls;
-    if(counts[s] !== undefined) counts[s]++;
+  // 2. Contadores por tipo de respondente
+  const counts = {
+    paciente:     { total:0, done:0 },
+    pais:         { total:0, done:0 },
+    professores:  { total:0, done:0 },
+    familiares:   { total:0, done:0 },
+    profissional: { total:0, done:0 },
+  };
+
+  // 3. Preencho os contadores
+  for (const t of allowed){
+    const norm = normalizeSource(t.source).cls; // ex: "pais", "professores", etc.
+    if (!counts[norm]) continue;
+
+    counts[norm].total += 1;
+    if (statusOf(t) === "preenchido"){
+      counts[norm].done += 1;
+    }
   }
 
-  for(const r of RESPONDENTS){
-    const card = el("div", { className:`resp-card src-${r.cls}` });
+  // 4. Crio os cards apenas pros tipos que têm formulário liberado
+  for (const r of RESPONDENTS){
+    const data = counts[r.cls] || { total:0, done:0 };
+
+    // (3) Só renderiza se houver pelo menos 1 formulário pra esse respondente
+    if (data.total === 0) continue;
+
+    const finishedAll = (data.done === data.total && data.total > 0);
+
+    const card  = el("div", { className:`resp-card src-${r.cls}` });
     const title = el("div", { className:"title", textContent:r.label });
     const desc  = el("div", { className:"desc",  textContent:r.desc });
-    const count = el("div", { className:"count", textContent:`Formulários disponíveis: ${counts[r.cls]||0}` });
-    const btn   = el("button", { className:`resp-btn ${r.cls}`, textContent:"Abrir formulários" });
-    btn.addEventListener("click", ()=> openForSource(r.cls, r.label));
+
+    // (2) Linha com total e respondidos
+    const count = el("div", {
+      className:"count",
+      textContent:`Disponíveis: ${data.total} • Respondidos: ${data.done}`
+    });
+
+    // (4) Botão muda texto e trava se já respondeu tudo
+    const btn = el("button", {
+      className:`resp-btn ${r.cls}`,
+      textContent: finishedAll ? "Formulários preenchidos" : "Abrir formulários",
+      disabled: finishedAll
+    });
+
+    if (!finishedAll){
+      btn.addEventListener("click", ()=> openForSource(r.cls, r.label));
+    }
 
     card.appendChild(title);
     card.appendChild(desc);
@@ -605,7 +674,6 @@ function renderRespondentCards(){
     grid.appendChild(card);
   }
 }
-
 
 
 function renderTests(){
