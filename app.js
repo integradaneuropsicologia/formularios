@@ -6,11 +6,9 @@
 const SHEETDB_BASE = "https://sheetdb.io/api/v1/8pmdh33s9fvy8";
 const SHEETS = { TESTS: "Tests", PATIENTS: "Patients", TOKENS: "LinkTokens" };
 
-/* Fallbacks se a aba Tests não trouxer URL */
 const BASE_TEST_URL = "https://integradaneuropsicologia.github.io/formularios";
 const BASE_FORM_URL = "https://integradaneuropsicologia.github.io/formularios/share";
 
-/* Mapa opcional para sobrescrever URLs por código */
 const TEST_URLS = {
   BAI: "https://integradaneuropsicologia.github.io/formulariodeansiedade/",
   SRS2_AUTORRELATO: "https://integradaneuropsicologia.github.io/srs2/",
@@ -18,18 +16,25 @@ const TEST_URLS = {
 };
 
 const SHARE_URLS = {
-  // "SRS2": "https://.../srs2-share.html"
+  // "SRS2": "..."
 };
 
-/* Links de preencher levam token; links de segunda fonte não */
 const APPEND_TOKEN_PARAM = true;
 const DEFAULT_TARGETS = ["pais", "professores", "segunda_fonte", "heterorrelato"];
-
-const TEST_PREFIX = ""; // se tiver prefixo nas colunas na aba Patients
+const TEST_PREFIX = "";
 const DONE_SUFFIX = "_FEITO";
 
+/* Respondentes disponíveis */
+const RESPONDENTS = [
+  { cls: "paciente",     label: "Paciente",          desc: "Paciente quem deve responder." },
+  { cls: "pais",         label: "Pais/Cuidadores",   desc: "Pais/responsáveis é quem devem responder." },
+  { cls: "professores",  label: "Professores",       desc: "Professores/pedagogos quem devem responder." },
+  { cls: "familiares",   label: "Familiares/Amigos", desc: "Familiares/amigos que o paciente escolher." },
+  { cls: "profissional", label: "Profissional",      desc: "Preenchimento reservado ao profissional que está avaliando." }
+];
+
 /* ===========================
- * HELPERS DOM / GERAIS
+ * HELPERS
  * =========================== */
 
 const $ = (s) => document.querySelector(s);
@@ -40,18 +45,19 @@ const qs = (k) => new URLSearchParams(location.search).get(k) || "";
 function setMsg(text = "", type = "ok") {
   const b = $("#msg");
   if (!b) return;
-  b.textContent = text;
-  let cls = "msg ";
   if (!text) {
-    cls += "hidden";
-  } else if (type === "ok") {
-    cls += "okbox";
-  } else if (type === "warn") {
-    cls += "warnbox";
-  } else {
-    cls += "errbox";
+    b.className = "msg hidden";
+    b.textContent = "";
+    return;
   }
+  const cls =
+    type === "ok"
+      ? "msg okbox"
+      : type === "warn"
+      ? "msg warnbox"
+      : "msg errbox";
   b.className = cls;
+  b.textContent = text;
 }
 
 async function sheetSearch(sheet, params) {
@@ -95,7 +101,7 @@ function buildUrl(base, params) {
 }
 
 /* ===========================
- * TEMA (LIGHT/DARK)
+ * TEMA (CLARO/ESCURO)
  * =========================== */
 
 (function initTheme() {
@@ -105,26 +111,30 @@ function buildUrl(base, params) {
   function applyTheme(theme) {
     body.setAttribute("data-theme", theme);
     try {
-      localStorage.setItem("integrada-paciente-theme", theme);
+      localStorage.setItem("integrada-area-paciente-theme", theme);
     } catch (e) {}
     if (btn) {
       btn.textContent =
-        theme === "light" ? "☀️ Modo claro" : "🌙 Modo escuro";
+        theme === "dark" ? "🌙 Modo escuro" : "☀️ Modo claro";
     }
   }
 
   let saved = null;
   try {
-    saved = localStorage.getItem("integrada-paciente-theme");
+    saved = localStorage.getItem("integrada-area-paciente-theme");
   } catch (e) {}
 
-  if (saved === "light" || saved === "dark") applyTheme(saved);
-  else applyTheme("dark");
+  if (saved === "light" || saved === "dark") {
+    applyTheme(saved);
+  } else {
+    applyTheme("light"); // padrão inicial pedido
+  }
 
   if (btn) {
     btn.addEventListener("click", () => {
-      const current =
-        body.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      const current = body.getAttribute("data-theme") === "dark"
+        ? "light"
+        : "dark";
       applyTheme(current);
     });
   }
@@ -136,7 +146,102 @@ function buildUrl(base, params) {
 
 let TOKEN = "";
 let patient = null;
-let testsCatalog = []; // { code, label, order, shareable, targets, form_url, share_url }
+let testsCatalog = []; // {code,label,order,shareable,targets,form_url,share_url,source}
+let currentSource = null;
+let currentSourceLabel = "—";
+
+/* ===========================
+ * NORMALIZAÇÃO DE SOURCE
+ * =========================== */
+
+function normalizeSource(raw) {
+  const s = (raw || "")
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .trim();
+
+  // Paciente
+  if (/\b(pac(iente)?|autorrelato)\b/.test(s))
+    return { cls: "paciente", label: "Paciente" };
+
+  // Pais / Cuidadores
+  if (/\b(pais|pai|mae|mae|cuidador(a)?|responsavel)\b/.test(s))
+    return { cls: "pais", label: "Pais/Cuidadores" };
+
+  // Profissional (checar antes de professores)
+  if (
+    /\b(profiss(ional)?|avaliador(a)?|psico(logo|loga)?|neuropsico(logo|loga)?|terapeuta)\b/.test(
+      s
+    )
+  )
+    return { cls: "profissional", label: "Profissional" };
+
+  // Professores / Escola
+  if (/\b(professor(es)?|docente(s)?|escola)\b/.test(s))
+    return { cls: "professores", label: "Professores" };
+
+  // Familiares / Amigos
+  if (/\b(familia(res)?|amig(o|a|os|as))\b/.test(s))
+    return { cls: "familiares", label: "Familiares/Amigos" };
+
+  // Fallback
+  return { cls: "profissional", label: raw || "Profissional" };
+}
+
+/* ===========================
+ * URLS TESTES
+ * =========================== */
+
+function colFor(t) {
+  return TEST_PREFIX ? TEST_PREFIX + t.code : t.code;
+}
+
+function doneColFor(t) {
+  return colFor(t) + DONE_SUFFIX;
+}
+
+function isAllowed(t) {
+  return (
+    patient &&
+    String(patient[colFor(t)] || "").toLowerCase() === "sim"
+  );
+}
+
+function statusOf(t) {
+  if (!isAllowed(t)) return "oculto";
+  const done =
+    String(patient[doneColFor(t)] || "").toLowerCase() === "sim";
+  return done ? "preenchido" : "ja";
+}
+
+/* URL principal (preencher) */
+function resolveFillUrl(t) {
+  const base =
+    t.form_url ||
+    TEST_URLS[t.code] ||
+    `${BASE_TEST_URL}/${encodeURIComponent(
+      String(t.code || "").toLowerCase()
+    )}.html`;
+  return APPEND_TOKEN_PARAM
+    ? buildUrl(base, { token: TOKEN })
+    : base;
+}
+
+/* URL de segunda fonte (se usar) */
+function resolveShareUrl(t, target) {
+  const base =
+    t.share_url ||
+    SHARE_URLS[t.code] ||
+    `${BASE_FORM_URL}/${encodeURIComponent(
+      String(t.code || "").toLowerCase()
+    )}.html`;
+  return buildUrl(base, {
+    cpf: onlyDigits(patient.cpf || ""),
+    source: target
+  });
+}
 
 /* ===========================
  * BOOT VIA TOKEN
@@ -153,12 +258,12 @@ let testsCatalog = []; // { code, label, order, shareable, targets, form_url, sh
       return;
     }
 
-    // 1) Token -> validar e pegar CPF
+    // Token → valida e pega CPF
     const trows = await sheetSearch(SHEETS.TOKENS, { token: TOKEN });
     if (!trows || !trows.length)
       throw new Error("Token inválido ou expirado.");
-
     const t = trows[0];
+
     if (String(t.disabled || "não").toLowerCase() === "sim")
       throw new Error("Token desativado. Peça um novo link.");
     if (t.expires_at && new Date(t.expires_at) < new Date())
@@ -167,19 +272,21 @@ let testsCatalog = []; // { code, label, order, shareable, targets, form_url, sh
     const cpf = onlyDigits(t.cpf || "");
     if (!cpf) throw new Error("Token sem CPF vinculado.");
 
-    // 2) Paciente
+    // Paciente
     const prows = await sheetSearch(SHEETS.PATIENTS, { cpf });
     if (!prows || !prows.length)
       throw new Error("Paciente não encontrado.");
+
     patient = prows[0];
 
-    // 3) Catálogo de testes
+    // Catálogo de testes
     await loadTests();
 
-    // 4) Render
+    // Render inicial
     $("#pacNomeSpan").textContent = patient.nome || "Paciente";
     renderPatientInfo();
-    renderTests();
+    renderRespondentCards();
+    toggleSections(false);
 
     $("#viewApp").classList.remove("hidden");
     $("#btnSair").classList.remove("hidden");
@@ -195,7 +302,7 @@ let testsCatalog = []; // { code, label, order, shareable, targets, form_url, sh
 })();
 
 /* ===========================
- * SAIR
+ * LOGOUT
  * =========================== */
 
 $("#btnSair")?.addEventListener("click", () => {
@@ -204,7 +311,7 @@ $("#btnSair")?.addEventListener("click", () => {
 });
 
 /* ===========================
- * INFO DO PACIENTE
+ * INFO PACIENTE
  * =========================== */
 
 function renderPatientInfo() {
@@ -214,10 +321,7 @@ function renderPatientInfo() {
 
   const info = [
     ["Nome", patient.nome || "-"],
-    ["CPF", maskCPF(patient.cpf)],
-    ["Nascimento", fmtDateISO(patient.data_nascimento)],
-    ["E-mail", patient.email || "-"],
-    ["WhatsApp", patient.whatsapp || "-"]
+    ["Nascimento", fmtDateISO(patient.data_nascimento || "")]
   ];
 
   for (const [k, v] of info) {
@@ -228,22 +332,8 @@ function renderPatientInfo() {
 }
 
 /* ===========================
- * TESTES
+ * LOAD TESTS
  * =========================== */
-
-$("#btnAtualizar")?.addEventListener("click", async () => {
-  if (!patient) return;
-  try {
-    const prows = await sheetSearch(SHEETS.PATIENTS, { cpf: patient.cpf });
-    if (prows && prows.length) patient = prows[0];
-    await loadTests(true);
-    renderTests();
-    setMsg("Atualizado.", "ok");
-    setTimeout(() => setMsg(""), 900);
-  } catch (e) {
-    console.error(e);
-  }
-});
 
 async function loadTests(skipFetch) {
   if (!skipFetch) {
@@ -265,6 +355,8 @@ async function loadTests(skipFetch) {
           .filter(Boolean);
         const form_url = (r.form_url || "").trim();
         const share_url = (r.share_url || "").trim();
+        const source = (r.source || "paciente").trim();
+
         return {
           code,
           label,
@@ -277,7 +369,8 @@ async function loadTests(skipFetch) {
               ? DEFAULT_TARGETS
               : [],
           form_url,
-          share_url
+          share_url,
+          source
         };
       })
       .filter(Boolean)
@@ -297,60 +390,138 @@ async function loadTests(skipFetch) {
   }
 }
 
-function colFor(t) {
-  return TEST_PREFIX ? TEST_PREFIX + t.code : t.code;
+/* ===========================
+ * ATUALIZAR
+ * =========================== */
+
+$("#btnAtualizar")?.addEventListener("click", async () => {
+  if (!patient) return;
+  try {
+    const prows = await sheetSearch(SHEETS.PATIENTS, { cpf: patient.cpf });
+    if (prows && prows.length) patient = prows[0];
+
+    await loadTests(true);
+    renderRespondentCards();
+    renderTests();
+
+    setMsg("Atualizado.", "ok");
+    setTimeout(() => setMsg(""), 900);
+  } catch (e) {
+    console.error(e);
+  }
+});
+
+/* ===========================
+ * SEÇÕES RESPONDENTES / TESTES
+ * =========================== */
+
+function toggleSections(showTests) {
+  const secResp = $("#respondentsSection");
+  const secTests = $("#testsSection");
+  if (!secResp || !secTests) return;
+
+  if (showTests) {
+    secResp.classList.add("hidden");
+    secTests.classList.remove("hidden");
+  } else {
+    secResp.classList.remove("hidden");
+    secTests.classList.add("hidden");
+  }
 }
 
-function doneColFor(t) {
-  return colFor(t) + DONE_SUFFIX;
+function openForSource(cls, label) {
+  currentSource = cls;
+  currentSourceLabel = label;
+  $("#selResp").textContent = label;
+  toggleSections(true);
+  renderTests();
 }
 
-function isAllowed(t) {
-  return (
-    patient &&
-    String(patient[colFor(t)] || "")
-      .toLowerCase() === "sim"
-  );
+function backToRespondents() {
+  currentSource = null;
+  currentSourceLabel = "—";
+  toggleSections(false);
 }
 
-function statusOf(t) {
-  if (!isAllowed(t)) return "oculto";
-  const done =
-    String(patient[doneColFor(t)] || "")
-      .toLowerCase() === "sim";
-  return done ? "preenchido" : "ja";
+$("#btnTrocarResp")?.addEventListener("click", backToRespondents);
+
+/* ===========================
+ * CARDS DE RESPONDENTES
+ * =========================== */
+
+function renderRespondentCards() {
+  const grid = $("#sourcesGrid");
+  if (!grid) return;
+  grid.innerHTML = "";
+
+  const allowed = testsCatalog.filter((t) => isAllowed(t));
+
+  const counts = {
+    paciente: { total: 0, done: 0 },
+    pais: { total: 0, done: 0 },
+    professores: { total: 0, done: 0 },
+    familiares: { total: 0, done: 0 },
+    profissional: { total: 0, done: 0 }
+  };
+
+  for (const t of allowed) {
+    const norm = normalizeSource(t.source).cls;
+    if (!counts[norm]) continue;
+    counts[norm].total += 1;
+    if (statusOf(t) === "preenchido") {
+      counts[norm].done += 1;
+    }
+  }
+
+  for (const r of RESPONDENTS) {
+    const data = counts[r.cls] || { total: 0, done: 0 };
+    if (data.total === 0) continue;
+
+    const finishedAll =
+      data.total > 0 && data.done === data.total;
+
+    const card = el("div", {
+      className: `resp-card src-${r.cls}`
+    });
+    const title = el("div", {
+      className: "title",
+      textContent: r.label
+    });
+    const desc = el("div", {
+      className: "desc",
+      textContent: r.desc
+    });
+    const count = el("div", {
+      className: "count",
+      textContent: `Disponíveis: ${data.total} • Respondidos: ${data.done}`
+    });
+
+    const btn = el("button", {
+      className: `resp-btn ${r.cls}`,
+      textContent: finishedAll
+        ? "Formulários preenchidos"
+        : "Abrir formulários",
+      disabled: finishedAll
+    });
+
+    if (!finishedAll) {
+      btn.addEventListener("click", () =>
+        openForSource(r.cls, r.label)
+      );
+    }
+
+    card.appendChild(title);
+    card.appendChild(desc);
+    card.appendChild(count);
+    card.appendChild(btn);
+    grid.appendChild(card);
+  }
 }
 
-/* URL para preencher (com token) */
-function resolveFillUrl(t) {
-  const base =
-    t.form_url ||
-    TEST_URLS[t.code] ||
-    `${BASE_TEST_URL}/${encodeURIComponent(
-      String(t.code || "").toLowerCase()
-    )}.html`;
+/* ===========================
+ * LISTA DE TESTES POR RESPONDENTE
+ * =========================== */
 
-  return APPEND_TOKEN_PARAM
-    ? buildUrl(base, { token: TOKEN })
-    : base;
-}
-
-/* URL de segunda fonte (sem token) */
-function resolveShareUrl(t, target) {
-  const base =
-    t.share_url ||
-    SHARE_URLS[t.code] ||
-    `${BASE_FORM_URL}/${encodeURIComponent(
-      String(t.code || "").toLowerCase()
-    )}.html`;
-
-  return buildUrl(base, {
-    cpf: onlyDigits(patient.cpf || ""),
-    source: target
-  });
-}
-
-/* Render dos cards */
 function renderTests() {
   const grid = $("#testsGrid");
   if (!grid) return;
@@ -362,30 +533,47 @@ function renderTests() {
     return;
   }
 
-  const list = testsCatalog.filter((t) => isAllowed(t));
+  if (!currentSource) return;
+
+  const list = testsCatalog.filter((t) => {
+    if (!isAllowed(t)) return false;
+    const src = normalizeSource(t.source).cls;
+    return src === currentSource;
+  });
+
   if (!list.length) {
     grid.innerHTML =
-      "<p class='muted'>Você ainda não possui testes liberados.</p>";
+      "<p class='muted'>Não há formulários para este respondente.</p>";
     return;
   }
 
   for (const t of list) {
-    const st = statusOf(t); // "preenchido" | "ja"
+    const st = statusOf(t);
+    const src = normalizeSource(t.source);
 
-    const card = el("div", { className: "test" });
-    const head = el("div", { className: "test-head" });
-
-    const titleWrap = el("div", { style: "min-width:0" });
-    const code = el("div", {
-      className: "test-title",
-      textContent: t.code
+    const card = el("div", {
+      className: `test src-${src.cls}`
     });
-    const label = el("div", {
-      className: "test-label",
+
+    const head = el("div", { className: "test-head" });
+    const titleWrap = el("div", { style: "min-width:0" });
+
+    const title = el("div", {
+      className: "test-title",
       textContent: t.label
     });
+    const code = el("div", {
+      className: "test-code",
+      textContent: t.code
+    });
+
+    titleWrap.appendChild(title);
     titleWrap.appendChild(code);
-    titleWrap.appendChild(label);
+
+    const srcChip = el("span", {
+      className: `srcchip ${src.cls}`,
+      textContent: src.label
+    });
 
     const tag = el("span", {
       className:
@@ -399,13 +587,13 @@ function renderTests() {
     });
 
     head.appendChild(titleWrap);
+    head.appendChild(srcChip);
     head.appendChild(tag);
     card.appendChild(head);
 
     const actions = el("div", { className: "toolbar" });
 
     if (t.shareable) {
-      // TESTE COMPARTILHÁVEL
       if (st === "preenchido") {
         actions.appendChild(
           el("button", {
@@ -416,14 +604,11 @@ function renderTests() {
         );
       } else {
         const btnShare = el("button", {
-          className: "btn ok",
+          className: `btn btn-src-${src.cls}`,
           textContent: "Enviar link"
         });
-
         btnShare.addEventListener("click", async () => {
-          // usa o MESMO link de preenchimento (com token)
           const shareUrl = resolveFillUrl(t);
-
           try {
             await navigator.clipboard.writeText(shareUrl);
             setMsg(
@@ -437,11 +622,9 @@ function renderTests() {
             alert(shareUrl);
           }
         });
-
         actions.appendChild(btnShare);
       }
     } else {
-      // TESTE NORMAL (não compartilhável)
       if (st === "preenchido") {
         actions.appendChild(
           el("button", {
@@ -452,7 +635,7 @@ function renderTests() {
         );
       } else {
         const btnPre = el("button", {
-          className: "btn ok",
+          className: `btn btn-src-${src.cls}`,
           textContent: "Preencher"
         });
         btnPre.addEventListener("click", () => {
@@ -467,7 +650,10 @@ function renderTests() {
   }
 }
 
-/* Opcional: diálogo pra escolher target (se quiser voltar a usar) */
+/* ===========================
+ * OPCIONAL: ESCOLHER TARGET
+ * (mantido se quiser customizar depois)
+ * =========================== */
 async function chooseTarget(targets) {
   if (!targets || !targets.length) return null;
   const label =
