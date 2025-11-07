@@ -2,53 +2,15 @@
   --font-main: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu;
   --radius-card: 14px;
 
-  /* cores fixas podem ser usadas em ambos temas se quiser */
+  /* cores por tipo de respondente */
+  --src-paciente: #22c55e;
+  --src-pais: #f59e0b;
+  --src-professores: #398df3;
+  --src-familiares: #e223ff;
+  --src-profissional: #ff0909;
 }
 
-/* ===== TEMA ESCURO (DEFAULT) ===== */
-body[data-theme="dark"] {
-  --bg: #0e1625;
-  --card: #14213b;
-  --line: #2b3f66;
-  --text: #f8fafc;
-  --muted: #cbd5e1;
-  --pri: #6d28d9;
-  --ok: #10b981;
-  --warn: #f59e0b;
-  --err: #ef4444;
-  --chip: #0b1220;
-
-  --test-bg: rgba(0, 0, 0, 0.18);
-  --info-bg: rgba(0, 0, 0, 0.18);
-
-  --msg-ok-bg: #06351f;
-  --msg-ok-border: #0e6c45;
-  --msg-ok-text: #c8ffe3;
-
-  --msg-warn-bg: #3a2903;
-  --msg-warn-border: #885e09;
-  --msg-warn-text: #ffe6b0;
-
-  --msg-err-bg: #3b0d0d;
-  --msg-err-border: #7f1d1d;
-  --msg-err-text: #ffd5d5;
-
-  --tag-bg: transparent;
-  --tag-border: var(--line);
-  --tag-text: #dbeafe;
-
-  --tag-ja-bg: #0b3d2a;
-  --tag-ja-border: #0e6c45;
-
-  --tag-pre-bg: #0a2b45;
-  --tag-pre-border: #145a86;
-
-  --tag-aguard-bg: #3a2903;
-  --tag-aguard-border: #885e09;
-  --tag-aguard-text: #ffe6b0;
-}
-
-/* ===== TEMA CLARO ===== */
+/* ========== TEMA CLARO (PADRÃO) ========== */
 body[data-theme="light"] {
   --bg: #f3f4f6;
   --card: #ffffff;
@@ -63,6 +25,8 @@ body[data-theme="light"] {
 
   --test-bg: #f9fafb;
   --info-bg: #f9fafb;
+  --resp-bg: #f9fafb;
+  --instructions-bg: #fefce8;
 
   --msg-ok-bg: #ecfdf5;
   --msg-ok-border: #bbf7d0;
@@ -76,9 +40,8 @@ body[data-theme="light"] {
   --msg-err-border: #fecaca;
   --msg-err-text: #991b1b;
 
-  --tag-bg: #eef2ff;
-  --tag-border: #c7d2fe;
-  --tag-text: #3730a3;
+  --tag-border: #cbd5f5;
+  --tag-text: #1d4ed8;
 
   --tag-ja-bg: #dcfce7;
   --tag-ja-border: #86efac;
@@ -91,7 +54,51 @@ body[data-theme="light"] {
   --tag-aguard-text: #92400e;
 }
 
-/* ===== BASE ===== */
+/* ========== TEMA ESCURO ========== */
+body[data-theme="dark"] {
+  --bg: #0e1625;
+  --card: #14213b;
+  --line: #2b3f66;
+  --text: #f8fafc;
+  --muted: #cbd5e1;
+  --pri: #6d28d9;
+  --ok: #10b981;
+  --warn: #f59e0b;
+  --err: #ef4444;
+  --chip: #0b1220;
+
+  --test-bg: rgba(0, 0, 0, 0.18);
+  --info-bg: rgba(0, 0, 0, 0.18);
+  --resp-bg: rgba(0, 0, 0, 0.18);
+  --instructions-bg: rgba(0, 0, 0, 0.18);
+
+  --msg-ok-bg: #06351f;
+  --msg-ok-border: #0e6c45;
+  --msg-ok-text: #c8ffe3;
+
+  --msg-warn-bg: #3a2903;
+  --msg-warn-border: #885e09;
+  --msg-warn-text: #ffe6b0;
+
+  --msg-err-bg: #3b0d0d;
+  --msg-err-border: #7f1d1d;
+  --msg-err-text: #ffd5d5;
+
+  --tag-border: var(--line);
+  --tag-text: #dbeafe;
+
+  --tag-ja-bg: #0b3d2a;
+  --tag-ja-border: #0e6c45;
+
+  --tag-pre-bg: #0a2b45;
+  --tag-pre-border: #145a86;
+
+  --tag-aguard-bg: #3a2903;
+  --tag-aguard-border: #885e09;
+  --tag-aguard-text: #ffe6b0;
+}
+
+/* ========== BASE ========== */
 
 * {
   box-sizing: border-box;
@@ -124,7 +131,7 @@ body {
   padding: 18px;
 }
 
-/* ===== TOPBAR ===== */
+/* TOPBAR */
 
 .topbar {
   display: flex;
@@ -145,7 +152,7 @@ body {
   align-items: center;
 }
 
-/* ===== TITULOS ===== */
+/* TÍTULOS */
 
 h1,
 h2 {
@@ -157,7 +164,7 @@ h2 {
   color: var(--muted);
 }
 
-/* ===== BOTOES ===== */
+/* BOTÕES */
 
 .btn {
   display: inline-flex;
@@ -185,7 +192,7 @@ h2 {
 }
 
 .btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
@@ -204,7 +211,13 @@ body[data-theme="light"] .btn.sec {
   background: var(--ok);
 }
 
-/* ===== TOOLBAR ===== */
+.btn-mini {
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+/* TOOLBAR */
 
 .toolbar {
   display: flex;
@@ -213,7 +226,7 @@ body[data-theme="light"] .btn.sec {
   margin: 10px 0;
 }
 
-/* ===== MENSAGENS ===== */
+/* MENSAGENS */
 
 .msg {
   margin: 12px 0;
@@ -241,30 +254,13 @@ body[data-theme="light"] .btn.sec {
   color: var(--msg-err-text);
 }
 
-/* ===== GRID INFO PACIENTE ===== */
+/* TEXTO */
 
-.grid-info {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin: 12px 0 6px;
+.muted {
+  color: var(--muted);
 }
 
-.info {
-  background: var(--info-bg);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px;
-  font-size: 0.9rem;
-}
-
-.info b {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--text);
-}
-
-/* ===== RESUMO / TAGS ===== */
+/* TAGS E RESUMO */
 
 .tag {
   display: inline-flex;
@@ -294,7 +290,158 @@ body[data-theme="light"] .btn.sec {
   color: var(--tag-aguard-text);
 }
 
-/* ===== GRID TESTES ===== */
+/* GRID INFO PACIENTE */
+
+.grid-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 12px 0 6px;
+}
+
+.info {
+  background: var(--info-bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 0.9rem;
+}
+
+.info b {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+/* INSTRUÇÕES E LEGENDA */
+
+.instructions {
+  background: var(--instructions-bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.legend {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.legend .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--chip);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.legend .dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+}
+
+.legend .dot.paciente { background: var(--src-paciente); }
+.legend .dot.pais { background: var(--src-pais); }
+.legend .dot.professores { background: var(--src-professores); }
+.legend .dot.familiares { background: var(--src-familiares); }
+.legend .dot.profissional { background: var(--src-profissional); }
+
+/* DESTACAR ORIENTAÇÕES INICIAIS */
+
+#respGuidance {
+  border: 2px solid var(--warn);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6), 0 0 30px rgba(245, 158, 11, 0.2);
+  animation: pulseWarn 1.25s ease-in-out infinite;
+}
+
+@keyframes pulseWarn {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.7),
+                0 0 30px rgba(245, 158, 11, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 2px rgba(245, 158, 11, 0.2),
+                0 0 8px rgba(245, 158, 11, 0.05);
+  }
+}
+
+/* GRID RESPONDENTES */
+
+.resp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 10px 0 6px;
+}
+
+.resp-card {
+  background: var(--resp-bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.resp-card .title {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.resp-card .desc {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.resp-card .count {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* borda colorida por respondente */
+.resp-card.src-paciente { border-left: 6px solid var(--src-paciente); }
+.resp-card.src-pais { border-left: 6px solid var(--src-pais); }
+.resp-card.src-professores { border-left: 6px solid var(--src-professores); }
+.resp-card.src-familiares { border-left: 6px solid var(--src-familiares); }
+.resp-card.src-profissional { border-left: 6px solid var(--src-profissional); }
+
+/* botões dos respondentes */
+
+.resp-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.resp-btn.paciente { background: var(--src-paciente); color: #05240f; }
+.resp-btn.pais { background: var(--src-pais); color: #231a03; }
+.resp-btn.professores { background: var(--src-professores); color: #ffffff; }
+.resp-btn.familiares { background: var(--src-familiares); color: #ffffff; }
+.resp-btn.profissional { background: var(--src-profissional); color: #ffffff; }
+
+.resp-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+
+/* GRID TESTES */
 
 .grid {
   display: grid;
@@ -314,38 +461,124 @@ body[data-theme="light"] .btn.sec {
   min-width: 0;
 }
 
+/* borda lateral colorida */
+.test.src-paciente {
+  border-left: 6px solid var(--src-paciente);
+}
+.test.src-pais {
+  border-left: 6px solid var(--src-pais);
+}
+.test.src-professores {
+  border-left: 6px solid var(--src-professores);
+}
+.test.src-familiares {
+  border-left: 6px solid var(--src-familiares);
+}
+.test.src-profissional {
+  border-left: 6px solid var(--src-profissional);
+}
+
+/* cabeçalho do card */
+
 .test-head {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 12px;
+  row-gap: 6px;
   align-items: flex-start;
   min-width: 0;
 }
 
+/* título+code ocupam a linha inteira */
+.test-head > *:first-child {
+  grid-column: 1 / -1;
+}
+
 .test-title {
   font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.35;
   overflow-wrap: anywhere;
   word-break: break-word;
-  min-width: 0;
 }
 
-.test-label {
-  font-weight: 400;
-  color: var(--text);
-  opacity: 0.95;
+.test-code {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.25;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
 }
 
-.muted {
+/* chips */
+
+.srcchip,
+.tag {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.srcchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--chip);
   color: var(--muted);
 }
 
-/* ===== UTIL ===== */
+.srcchip::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.srcchip.paciente::before { background: var(--src-paciente); }
+.srcchip.pais::before { background: var(--src-pais); }
+.srcchip.professores::before { background: var(--src-professores); }
+.srcchip.familiares::before { background: var(--src-familiares); }
+.srcchip.profissional::before { background: var(--src-profissional); }
+
+/* botões dentro do card por origem */
+
+.btn-src-paciente {
+  background: var(--src-paciente) !important;
+  color: #05240f !important;
+}
+.btn-src-pais {
+  background: var(--src-pais) !important;
+  color: #231a03 !important;
+}
+.btn-src-professores {
+  background: var(--src-professores) !important;
+  color: #ffffff !important;
+}
+.btn-src-familiares {
+  background: var(--src-familiares) !important;
+  color: #ffffff !important;
+}
+.btn-src-profissional {
+  background: var(--src-profissional) !important;
+  color: #ffffff !important;
+}
+
+/* SEÇÕES */
 
 .hidden {
   display: none !important;
 }
 
-/* ===== RESPONSIVO ===== */
+#testsSection.hidden,
+#respondentsSection.hidden {
+  display: none !important;
+}
+
+/* RESPONSIVO */
 
 @media (max-width: 720px) {
   .grid-info {
@@ -359,5 +592,8 @@ body[data-theme="light"] .btn.sec {
   }
   .test-head {
     grid-template-columns: 1fr;
+  }
+  .test-head > *:first-child {
+    grid-column: auto;
   }
 }
