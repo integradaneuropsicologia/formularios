@@ -7,17 +7,17 @@
   <meta name="description" content="Portal do paciente para acessar e preencher testes liberados."/>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body data-theme="dark">
+<body data-theme="light">
   <div class="wrap">
     <div class="topbar">
       <div class="brand">Integrada Neuropsicologia — Área do Paciente</div>
       <div class="top-actions">
-        <button id="themeToggle" class="btn sec">🌙 Modo escuro</button>
+        <button id="themeToggle" class="btn sec">☀️ Modo claro</button>
         <button id="btnSair" class="btn sec hidden">Sair</button>
       </div>
     </div>
 
-    <!-- AVISOS GERAIS -->
+    <!-- AVISOS -->
     <div id="msg" class="msg hidden"></div>
 
     <!-- APP -->
@@ -25,15 +25,45 @@
       <h1>Olá, <span id="pacNomeSpan">Paciente</span></h1>
 
       <!-- Dados do paciente -->
-      <div class="grid-info" id="pacInfo"></div>
+      <div class="grid-info" id="pacInfo" style="margin:10px 0 6px;"></div>
 
       <div class="toolbar">
         <button id="btnAtualizar" class="btn sec">Atualizar</button>
         <span id="resume" class="tag">—</span>
       </div>
 
-      <h2>Seus testes liberados</h2>
-      <div id="testsGrid" class="grid" aria-live="polite"></div>
+      <!-- Orientações por cor -->
+      <div class="instructions" id="respGuidance">
+        <b>Orientações</b>
+        <div class="muted" style="margin-top:6px">
+          Cada pessoa deve responder <strong>apenas</strong> os formulários com a <strong>própria cor</strong>.
+        </div>
+        <div class="legend">
+          <span class="chip"><span class="dot paciente"></span> Paciente</span>
+          <span class="chip"><span class="dot pais"></span> Pais/Cuidadores</span>
+          <span class="chip"><span class="dot professores"></span> Professores</span>
+          <span class="chip"><span class="dot familiares"></span> Familiares/Amigos</span>
+          <span class="chip"><span class="dot profissional"></span> Profissional</span>
+        </div>
+      </div>
+
+      <h2>Quem vai responder?</h2>
+
+      <!-- Seção: seleção de respondente -->
+      <div id="respondentsSection">
+        <div id="sourcesGrid" class="resp-grid" aria-live="polite"></div>
+      </div>
+
+      <!-- Seção: testes filtrados pelo respondente -->
+      <div id="testsSection" class="hidden">
+        <div class="subbar">
+          <div class="who">
+            Formulários para: <b id="selResp">—</b>
+          </div>
+          <button id="btnTrocarResp" class="btn sec btn-mini">Trocar respondente</button>
+        </div>
+        <div id="testsGrid" class="grid" aria-live="polite"></div>
+      </div>
     </section>
   </div>
 
