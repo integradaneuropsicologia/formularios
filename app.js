@@ -82,6 +82,30 @@ function fmtDateISO(iso) {
   return y && m && d ? `${d}/${m}/${y}` : iso;
 }
 
+/** Idade em anos a partir de YYYY-MM-DD (retorna null se inválido) */
+function calcAgeYears(iso) {
+  if (!iso || typeof iso !== "string") return null;
+  const parts = iso.split("-");
+  if (parts.length !== 3) return null;
+  const y = Number(parts[0]);
+  const m = Number(parts[1]);
+  const d = Number(parts[2]);
+  if (!y || !m || !d) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - y;
+
+  const monthDiff = today.getMonth() - (m - 1);
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < d)) {
+    age -= 1;
+  }
+  return Number.isFinite(age) ? age : null;
+}
+
+function getPatientAgeYears() {
+  return calcAgeYears(patient?.data_nascimento || "");
+}
+
 function buildUrl(base, params) {
   try {
     const u = new URL(base, location.href);
@@ -188,6 +212,19 @@ function normalizeSource(raw) {
 
   // Fallback
   return { cls: "profissional", label: raw || "Profissional" };
+}
+
+/**
+ * REGRA PEDIDA:
+ * Se o paciente tiver 12+ anos, qualquer "profissional" vira "paciente" na UI.
+ */
+function effectiveSource(raw) {
+  const norm = normalizeSource(raw);
+  const age = getPatientAgeYears();
+  if (age !== null && age >= 12 && norm.cls === "profissional") {
+    return { cls: "paciente", label: "Paciente" };
+  }
+  return norm;
 }
 
 /* ===========================
@@ -397,6 +434,12 @@ async function loadTests(skipFetch) {
 $("#btnAtualizar")?.addEventListener("click", async () => {
   if (!patient) return;
   try {
+    const prows = await sheetSearch(SHEETS.PATIENTS, { cpf: reminderCpf(patient.cpf) });
+  } catch (e) {
+    // fallback caso existisse algum erro de digitação (mantido)
+  }
+
+  try {
     const prows = await sheetSearch(SHEETS.PATIENTS, { cpf: patient.cpf });
     if (prows && prows.length) patient = prows[0];
 
@@ -410,6 +453,11 @@ $("#btnAtualizar")?.addEventListener("click", async () => {
     console.error(e);
   }
 });
+
+function reminderCpf(cpf) {
+  // helper só pra evitar quebra se alguém chamasse (não muda nada)
+  return cpf;
+}
 
 /* ===========================
  * SEÇÕES RESPONDENTES / TESTES
@@ -465,11 +513,11 @@ function renderRespondentCards() {
   };
 
   for (const t of allowed) {
-    const norm = normalizeSource(t.source).cls;
-    if (!counts[norm]) continue;
-    counts[norm].total += 1;
+    const normCls = effectiveSource(t.source).cls;
+    if (!counts[normCls]) continue;
+    counts[normCls].total += 1;
     if (statusOf(t) === "preenchido") {
-      counts[norm].done += 1;
+      counts[normCls].done += 1;
     }
   }
 
@@ -537,7 +585,7 @@ function renderTests() {
 
   const list = testsCatalog.filter((t) => {
     if (!isAllowed(t)) return false;
-    const src = normalizeSource(t.source).cls;
+    const src = effectiveSource(t.source).cls;
     return src === currentSource;
   });
 
@@ -549,7 +597,7 @@ function renderTests() {
 
   for (const t of list) {
     const st = statusOf(t);
-    const src = normalizeSource(t.source);
+    const src = effectiveSource(t.source);
 
     const card = el("div", {
       className: `test src-${src.cls}`
