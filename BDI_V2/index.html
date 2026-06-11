@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>BDI_V2 - Inventário de Depressão de Beck</title>
+<style>
+  :root{
+    --bg:#f4f6f8;
+    --card:#ffffff;
+    --line:#d9e0e7;
+    --text:#111827;
+    --muted:#64748b;
+    --surface:#f8fafc;
+    --chip:#eef6f8;
+    --chip-border:#cfe2e8;
+    --pri:#176b7a;
+    --pri-strong:#11515d;
+    --err:#b91c1c;
+    --ok-bg:#ecfdf3;
+    --ok-border:#bbf7d0;
+    --ok-text:#166534;
+    --err-bg:#fff1f2;
+    --err-border:#fecdd3;
+    --err-text:#9f1239;
+    --warn-bg:#fffbeb;
+    --warn-border:#fde68a;
+    --warn-text:#92400e;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--text);
+    font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
+  }
+  .wrap{max-width:980px;margin:22px auto;padding:0 16px}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    box-shadow:0 18px 36px rgba(15,23,42,.12);
+    overflow:hidden;
+  }
+  .header{
+    padding:20px;
+    border-bottom:1px solid var(--line);
+    background:#fbfdfe;
+  }
+  h1{margin:0 0 6px;font-size:1.45rem;letter-spacing:0}
+  .muted{margin:0;color:var(--muted)}
+  .content{padding:18px 20px 20px}
+  .hidden{display:none !important}
+  .status,.msg{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px;
+    margin:12px 0;
+    font-size:.94rem;
+  }
+  .status.loading{background:#eef6ff;border-color:#bfdbfe;color:#1d4ed8}
+  .status.ok,.msg.ok{background:var(--ok-bg);border-color:var(--ok-border);color:var(--ok-text)}
+  .status.err,.msg.err{background:var(--err-bg);border-color:var(--err-border);color:var(--err-text)}
+  .status.warn,.msg.warn{background:var(--warn-bg);border-color:var(--warn-border);color:var(--warn-text)}
+  .grid-info{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+  @media(max-width:720px){.grid-info{grid-template-columns:1fr}}
+  .info{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px;
+  }
+  .info b{
+    display:block;
+    margin-bottom:4px;
+    color:var(--muted);
+    font-size:.78rem;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  .pill-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:10px 0 16px;
+  }
+  .pill-row span{
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:7px 10px;
+    background:var(--surface);
+    color:var(--muted);
+    font-size:.88rem;
+  }
+  .progress{
+    height:10px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:6px;
+  }
+  .bar{
+    width:0;
+    height:100%;
+    background:linear-gradient(90deg,var(--pri),#22c55e);
+  }
+  .question{
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:10px;
+    padding:14px;
+    margin-bottom:12px;
+  }
+  .question.invalid{
+    border-color:var(--err);
+    background:#fff7f8;
+  }
+  .question-title{
+    margin:0 0 10px;
+    font-size:1rem;
+    font-weight:700;
+  }
+  .options{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+  .option{
+    display:flex;
+    align-items:flex-start;
+    gap:9px;
+    min-height:44px;
+    padding:10px 12px;
+    border:1px solid var(--chip-border);
+    border-radius:10px;
+    background:var(--chip);
+    cursor:pointer;
+  }
+  .option input{margin-top:4px;accent-color:var(--pri)}
+  .option:has(input:checked){
+    border-color:var(--pri);
+    background:#dff3f5;
+  }
+  .subquestion{
+    margin-top:12px;
+    border-top:1px solid var(--line);
+    padding-top:12px;
+  }
+  .subquestion p{margin:0 0 8px;font-weight:700}
+  .subquestion .options{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+  @media(max-width:560px){.subquestion .options{grid-template-columns:1fr}}
+  .actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:16px;
+    border-top:1px solid var(--line);
+    padding-top:16px;
+  }
+  .btn{
+    border:0;
+    border-radius:10px;
+    padding:12px 16px;
+    font-weight:700;
+    cursor:pointer;
+    background:var(--pri);
+    color:#fff;
+  }
+  .btn:hover{background:var(--pri-strong)}
+  .btn.ghost{
+    background:#eef6f8;
+    color:var(--pri-strong);
+    border:1px solid var(--chip-border);
+  }
+  .btn:disabled{opacity:.65;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <header class="header">
+      <h1>BDI - Inventário de Depressão de Beck</h1>
+      <p class="muted">Escolha, em cada grupo, a afirmação que melhor descreve seus sentimentos durante a última semana, incluindo hoje.</p>
+    </header>
+
+    <main class="content">
+      <div id="statusBox" class="status loading">Carregando formulário...</div>
+      <div id="metaInfo" class="pill-row hidden"></div>
+      <div id="pacInfo" class="grid-info hidden"></div>
+
+      <div id="progressWrap" class="hidden">
+        <p id="progressText" class="muted">Progresso: 0/22</p>
+        <div class="progress"><div id="bar" class="bar"></div></div>
+      </div>
+
+      <form id="testForm" class="hidden" novalidate>
+        <div class="pill-row" aria-label="Regra de pontuação">
+          <span>Itens 1 a 21</span>
+          <span>Pontuação por item: 0 a 3</span>
+          <span>Total: 0 a 63</span>
+        </div>
+        <div id="questions"></div>
+        <div class="actions">
+          <button id="submitBtn" class="btn" type="submit">Enviar respostas</button>
+          <button id="clearDraft" class="btn ghost" type="button">Limpar rascunho</button>
+        </div>
+        <div id="msgBox" class="msg hidden" role="alert" aria-live="polite"></div>
+      </form>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ydypdeafbcdcamwigjuq.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_lg9teAniku65cd2dnZJvIQ_Zii0XneZ";
+  const AREA_PACIENTE_URL = "https://integradaneuropsicologia.github.io/area-do-paciente-v2/";
+  const TEST_CODE_FIXO = "BDI_V2";
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const ITEMS = [
+    {
+      titulo: "Tristeza",
+      opcoes: [
+        "Não me sinto triste.",
+        "Sinto-me triste.",
+        "Sinto-me sempre triste e não consigo deixar de estar.",
+        "Sinto-me tão triste ou infeliz que não consigo suportar."
+      ]
+    },
+    {
+      titulo: "Desânimo quanto ao futuro",
+      opcoes: [
+        "Não me sinto especialmente desanimado quanto ao futuro.",
+        "Sinto-me desanimado quanto ao futuro.",
+        "Sinto que não há nada porque lutar.",
+        "Sinto que não tenho esperança no futuro e tenho a impressão de que as coisas não podem melhorar."
+      ]
+    },
+    {
+      titulo: "Fracasso",
+      opcoes: [
+        "Não me sinto um fracasso.",
+        "Acho que fracassei mais do que uma pessoa comum.",
+        "Quando olho para trás, na minha vida, tudo o que vejo é um fracasso atrás do outro.",
+        "Acho que, como pessoa, sou um fracasso total."
+      ]
+    },
+    {
+      titulo: "Prazer",
+      opcoes: [
+        "Tenho tanto prazer nas coisas como antes.",
+        "Não tenho tanto prazer nas coisas como antes.",
+        "Já não tenho prazer nenhum com as coisas.",
+        "Estou insatisfeito ou aborrecido com tudo."
+      ]
+    },
+    {
+      titulo: "Culpa",
+      opcoes: [
+        "Não me sinto especialmente culpado.",
+        "Sinto-me culpado em bastantes ocasiões.",
+        "Sinto-me culpado na maioria das ocasiões.",
+        "Sinto-me sempre culpado."
+      ]
+    },
+    {
+      titulo: "Punição",
+      opcoes: [
+        "Não sinto que estou sendo castigado.",
+        "Sinto que talvez esteja sendo castigado.",
+        "Sinto que vou ser castigado.",
+        "Sinto que estou sendo castigado."
+      ]
+    },
+    {
+      titulo: "Decepção consigo mesmo",
+      opcoes: [
+        "Não me sinto decepcionado comigo mesmo.",
+        "Estou decepcionado comigo mesmo.",
+        "Estou descontente comigo mesmo.",
+        "Detesto-me."
+      ]
+    },
+    {
+      titulo: "Autocrítica",
+      opcoes: [
+        "Não me considero pior que as outras pessoas.",
+        "Critico-me pela minha fraqueza ou pelos meus erros.",
+        "Culpo-me sempre pelas minhas falhas.",
+        "Culpo-me por tudo de mal que acontece."
+      ]
+    },
+    {
+      titulo: "Pensamentos suicidas",
+      opcoes: [
+        "Não tenho nenhum pensamento de suicídio.",
+        "Às vezes penso em suicidar-me, mas não o farei.",
+        "Desejava pôr fim à minha vida.",
+        "Suicidava-me se tivesse oportunidade."
+      ]
+    },
+    {
+      titulo: "Choro",
+      opcoes: [
+        "Não choro mais que o habitual.",
+        "Choro mais agora do que era costume.",
+        "Agora, choro o tempo todo.",
+        "Costumava ser capaz de chorar, mas agora não consigo mesmo que queira."
+      ]
+    },
+    {
+      titulo: "Irritabilidade",
+      opcoes: [
+        "Não estou especialmente irritado.",
+        "Irrito-me e chateio-me mais facilmente do que costumava.",
+        "Sinto-me irritado o tempo todo.",
+        "Agora não me irritam em absoluto coisas que antes me irritavam."
+      ]
+    },
+    {
+      titulo: "Interesse por outras pessoas",
+      opcoes: [
+        "Não perdi o interesse pelas outras pessoas.",
+        "Interesso-me menos do que costumava pelas outras pessoas.",
+        "Perdi a maior parte do meu interesse nas outras pessoas.",
+        "Perdi todo o meu interesse nas outras pessoas."
+      ]
+    },
+    {
+      titulo: "Decisões",
+      opcoes: [
+        "Tomo as minhas próprias decisões como antes.",
+        "Evito tomar decisões mais do que costumava.",
+        "Tenho maior dificuldade em tomar decisões do que antes.",
+        "É-me impossível tomar decisões."
+      ]
+    },
+    {
+      titulo: "Aparência",
+      opcoes: [
+        "Não sinto que a minha aparência seja pior do que costumava ser.",
+        "Preocupo-me porque pareço envelhecido ou pouco atraente.",
+        "Sinto que há mudanças permanentes na minha aparência que me fazem parecer pouco atraente.",
+        "Creio que tenho um aspecto horrível."
+      ]
+    },
+    {
+      titulo: "Trabalho / atividade",
+      opcoes: [
+        "Trabalho o mesmo que antes.",
+        "Custa-me mais que o habitual começar qualquer coisa.",
+        "Tenho que obrigar-me a mim mesmo para fazer qualquer coisa.",
+        "Sou incapaz de levar a cabo uma tarefa."
+      ]
+    },
+    {
+      titulo: "Sono",
+      opcoes: [
+        "Durmo tão bem como sempre.",
+        "Não durmo tão bem como costumava.",
+        "Acordo uma ou duas horas mais cedo do que é habitual e tenho dificuldade em voltar a adormecer.",
+        "Acordo várias horas mais cedo do que costumava e não consigo voltar a adormecer."
+      ]
+    },
+    {
+      titulo: "Cansaço",
+      opcoes: [
+        "Não me sinto mais cansado que o normal.",
+        "Canso-me com mais facilidade do que costumava.",
+        "Canso-me quando faço qualquer coisa.",
+        "Estou demasiado cansado para fazer qualquer coisa."
+      ]
+    },
+    {
+      titulo: "Apetite",
+      opcoes: [
+        "O meu apetite não diminuiu.",
+        "Não tenho tanto apetite como antes.",
+        "Agora tenho muito menos apetite.",
+        "Perdi completamente o apetite."
+      ]
+    },
+    {
+      titulo: "Perda de peso",
+      opcoes: [
+        "Não perdi peso ultimamente.",
+        "Perdi mais de 2 kg.",
+        "Perdi mais de 4 kg.",
+        "Perdi mais de 7 kg."
+      ]
+    },
+    {
+      titulo: "Preocupação com a saúde",
+      opcoes: [
+        "Não me preocupo mais que o habitual com a minha saúde.",
+        "Preocupo-me com problemas físicos como dores, perturbações no estômago ou constipações.",
+        "Estou muito preocupado com problemas físicos e é-me difícil pensar noutra coisa.",
+        "Estou tão preocupado com meus problemas físicos que não consigo pensar noutra coisa."
+      ]
+    },
+    {
+      titulo: "Interesse sexual",
+      opcoes: [
+        "Não tenho observado qualquer mudança recente no meu interesse sexual.",
+        "A relação sexual atrai-me menos que antes.",
+        "Estou muito menos interessado em sexo do que antes.",
+        "Perdi completamente o interesse por sexo."
+      ]
+    }
+  ];
+
+  const $ = (selector) => document.querySelector(selector);
+  const STORAGE_KEY = `BDI_V2_${getTokenFromUrl() || "anon"}`;
+
+  function setStatus(text, type = "loading") {
+    const el = $("#statusBox");
+    el.textContent = text;
+    el.className = `status ${type}`;
+  }
+
+  function setMessage(text, type = "err") {
+    const el = $("#msgBox");
+    el.textContent = text;
+    el.className = `msg ${type}`;
+    el.classList.remove("hidden");
+  }
+
+  function clearMessage() {
+    const el = $("#msgBox");
+    el.textContent = "";
+    el.className = "msg hidden";
+  }
+
+  function normalizeCPF(cpf) {
+    return String(cpf || "").replace(/\D/g, "");
+  }
+
+  function getTokenFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return String(params.get("token") || params.get("t") || "").trim();
+  }
+
+  function getCpfFromUrl() {
+    if (window.__patientFormAccess?.cpf) return normalizeCPF(window.__patientFormAccess.cpf);
+    const params = new URLSearchParams(window.location.search);
+    const legacyCpf = params.get("cpf");
+    if (legacyCpf) return normalizeCPF(legacyCpf);
+    const raw = window.location.search.replace("?", "").trim();
+    if (/^\d{11}$/.test(raw)) return raw;
+    return "";
+  }
+
+  function getTestCodeFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("form") || params.get("code") || TEST_CODE_FIXO;
+  }
+
+  function isObject(value) {
+    return value && typeof value === "object" && !Array.isArray(value);
+  }
+
+  function containsTestCode(jsonb, testCode) {
+    if (!jsonb) return false;
+    if (typeof jsonb === "string") return jsonb === testCode;
+    if (Array.isArray(jsonb)) {
+      return jsonb.some(item => {
+        if (typeof item === "string") return item === testCode;
+        if (isObject(item)) {
+          return item.code === testCode || item.test_code === testCode || item.id === testCode || containsTestCode(item, testCode);
+        }
+        return false;
+      });
+    }
+    if (isObject(jsonb)) {
+      if (Object.prototype.hasOwnProperty.call(jsonb, testCode)) {
+        const value = jsonb[testCode];
+        return value !== false && value !== null && value !== undefined;
+      }
+      if (jsonb.code === testCode || jsonb.test_code === testCode || jsonb.id === testCode) return true;
+      return Object.values(jsonb).some(v => containsTestCode(v, testCode));
+    }
+    return false;
+  }
+
+  function isTestLiberado(testsLiberados, testCode) {
+    if (!containsTestCode(testsLiberados, testCode)) return false;
+    if (isObject(testsLiberados) && Object.prototype.hasOwnProperty.call(testsLiberados, testCode)) {
+      const value = testsLiberados[testCode];
+      if (typeof value === "boolean") return value;
+      if (isObject(value) && "liberado" in value) return Boolean(value.liberado);
+      if (typeof value === "string") return !["false", "0", "nao", "não"].includes(value.toLowerCase());
+      return Boolean(value);
+    }
+    return true;
+  }
+
+  function isTestFeito(testsFeitos, testCode) {
+    if (!containsTestCode(testsFeitos, testCode)) return false;
+    if (isObject(testsFeitos) && Object.prototype.hasOwnProperty.call(testsFeitos, testCode)) {
+      const value = testsFeitos[testCode];
+      if (typeof value === "boolean") return value;
+      if (isObject(value) && "feito" in value) return Boolean(value.feito);
+      if (typeof value === "string") return !["false", "0", "nao", "não"].includes(value.toLowerCase());
+      return Boolean(value);
+    }
+    return true;
+  }
+
+  function normalizeTestsFeitosForSave(current) {
+    const out = {};
+    if (!current) return out;
+    if (typeof current === "string") {
+      out[current] = { feito: true };
+      return out;
+    }
+    if (Array.isArray(current)) {
+      current.forEach(item => {
+        if (typeof item === "string") {
+          out[item] = { feito: true };
+        } else if (isObject(item)) {
+          const code = item.code || item.test_code || item.id;
+          if (code) out[code] = { ...item, feito: ("feito" in item) ? Boolean(item.feito) : true };
+        }
+      });
+      return out;
+    }
+    if (isObject(current)) {
+      Object.entries(current).forEach(([key, value]) => {
+        if (typeof value === "boolean") {
+          out[key] = { feito: value };
+        } else if (typeof value === "string") {
+          out[key] = { feito: !["false", "0", "nao", "não"].includes(value.toLowerCase()) };
+        } else if (isObject(value)) {
+          out[key] = { ...value };
+        } else {
+          out[key] = { feito: Boolean(value) };
+        }
+      });
+    }
+    return out;
+  }
+
+  function buildUpdatedTestsFeitos(currentTestsFeitos, testCode, submittedAtIso) {
+    const next = normalizeTestsFeitosForSave(currentTestsFeitos);
+    next[testCode] = {
+      ...(isObject(next[testCode]) ? next[testCode] : {}),
+      feito: true,
+      submitted_at: submittedAtIso
+    };
+    return next;
+  }
+
+  function redirectToAreaPaciente() {
+    const token = getTokenFromUrl();
+    window.location.href = token ? `${AREA_PACIENTE_URL}?token=${encodeURIComponent(token)}` : AREA_PACIENTE_URL;
+  }
+
+  async function getPatientFormAccessByToken() {
+    const token = getTokenFromUrl();
+    const testCode = getTestCodeFromUrl();
+    if (!token || !testCode) {
+      return { data: null, error: new Error("Link inválido ou formulário não informado.") };
+    }
+    if (window.__patientFormAccess && window.__patientFormAccess.form_code === testCode) {
+      return { data: window.__patientFormAccess, error: null };
+    }
+    if (!window.__patientFormAccessPromise) {
+      window.__patientFormAccessPromise = supabaseClient
+        .rpc("get_public_patient_form_access", {
+          p_token: token,
+          p_form_code: testCode
+        })
+        .then(({ data, error }) => {
+          if (error) return { data: null, error };
+          const row = Array.isArray(data) ? data[0] : data;
+          window.__patientFormAccess = row || null;
+          return { data: row || null, error: null };
+        });
+    }
+    return window.__patientFormAccessPromise;
+  }
+
+  function installPatientTokenAccessShim() {
+    if (!supabaseClient || supabaseClient.__patientTokenAccessShim) return;
+    const originalFrom = supabaseClient.from.bind(supabaseClient);
+    supabaseClient.from = function(table) {
+      if (table !== "patients") return originalFrom(table);
+      const selectBuilder = {
+        select() { return this; },
+        eq() { return this; },
+        maybeSingle() { return getPatientFormAccessByToken(); },
+        single() { return getPatientFormAccessByToken(); }
+      };
+      return {
+        select() { return selectBuilder; },
+        update() {
+          return {
+            eq: async () => ({ data: null, error: null })
+          };
+        }
+      };
+    };
+    supabaseClient.__patientTokenAccessShim = true;
+  }
+
+  function renderPatientInfo(patient) {
+    const g = $("#pacInfo");
+    g.innerHTML = "";
+    [["Nome", patient.nome || "-"], ["E-mail", patient.email || "-"]].forEach(([label, value]) => {
+      const div = document.createElement("div");
+      div.className = "info";
+      div.innerHTML = `<b>${label}</b><div>${value || "-"}</div>`;
+      g.appendChild(div);
+    });
+    g.classList.remove("hidden");
+  }
+
+  function renderQuestions() {
+    const host = $("#questions");
+    host.innerHTML = "";
+    ITEMS.forEach((item, idx) => {
+      const number = idx + 1;
+      const qn = String(number).padStart(2, "0");
+      const wrap = document.createElement("section");
+      wrap.className = "question";
+      wrap.setAttribute("data-q", String(number));
+      const title = document.createElement("h2");
+      title.className = "question-title";
+      title.textContent = `${number}. ${item.titulo}`;
+      const options = document.createElement("div");
+      options.className = "options";
+      item.opcoes.forEach((optionText, value) => {
+        const id = `q${qn}_${value}`;
+        const label = document.createElement("label");
+        label.className = "option";
+        label.innerHTML = `
+          <input type="radio" name="q${qn}" id="${id}" value="${value}" required>
+          <span>${optionText}</span>
+        `;
+        options.appendChild(label);
+      });
+      wrap.append(title, options);
+      if (number === 19) {
+        const sub = document.createElement("div");
+        sub.className = "subquestion";
+        sub.innerHTML = `
+          <p>Você está tentando perder peso deliberadamente, comendo menos?</p>
+          <div class="options">
+            <label class="option">
+              <input type="radio" name="perda_peso_deliberada" value="sim" required>
+              <span>Sim</span>
+            </label>
+            <label class="option">
+              <input type="radio" name="perda_peso_deliberada" value="nao" required>
+              <span>Não</span>
+            </label>
+          </div>
+        `;
+        wrap.appendChild(sub);
+      }
+      host.appendChild(wrap);
+    });
+  }
+
+  function countAnswered() {
+    let count = 0;
+    for (let i = 1; i <= ITEMS.length; i++) {
+      const qn = String(i).padStart(2, "0");
+      if (document.querySelector(`input[name="q${qn}"]:checked`)) count++;
+    }
+    if (document.querySelector('input[name="perda_peso_deliberada"]:checked')) count++;
+    return count;
+  }
+
+  function updateProgress() {
+    const totalFields = ITEMS.length + 1;
+    const answered = countAnswered();
+    $("#progressText").textContent = `Progresso: ${answered}/${totalFields}`;
+    $("#bar").style.width = `${(answered / totalFields) * 100}%`;
+  }
+
+  function saveDraft() {
+    const data = {};
+    for (let i = 1; i <= ITEMS.length; i++) {
+      const qn = String(i).padStart(2, "0");
+      const selected = document.querySelector(`input[name="q${qn}"]:checked`);
+      if (selected) data[`q${qn}`] = Number(selected.value);
+    }
+    const lossIntent = document.querySelector('input[name="perda_peso_deliberada"]:checked');
+    if (lossIntent) data.perda_peso_deliberada = lossIntent.value;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (err) {
+      console.warn("Falha ao salvar rascunho", err);
+    }
+  }
+
+  function restoreDraft() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      Object.entries(data || {}).forEach(([key, value]) => {
+        if (key === "perda_peso_deliberada") {
+          const input = document.querySelector(`input[name="perda_peso_deliberada"][value="${value}"]`);
+          if (input) input.checked = true;
+          return;
+        }
+        const qn = key.replace("q", "");
+        const input = document.querySelector(`input[name="q${qn}"][value="${value}"]`);
+        if (input) input.checked = true;
+      });
+    } catch (err) {
+      console.warn("Falha ao restaurar rascunho", err);
+    }
+  }
+
+  function clearDraft() {
+    localStorage.removeItem(STORAGE_KEY);
+    document.querySelectorAll('input[type="radio"]').forEach(input => {
+      input.checked = false;
+    });
+    document.querySelectorAll(".question.invalid").forEach(el => el.classList.remove("invalid"));
+    updateProgress();
+    setMessage("Rascunho apagado.", "warn");
+  }
+
+  function validateAllAnswered() {
+    document.querySelectorAll(".question.invalid").forEach(el => el.classList.remove("invalid"));
+    for (let i = 1; i <= ITEMS.length; i++) {
+      const qn = String(i).padStart(2, "0");
+      const selected = document.querySelector(`input[name="q${qn}"]:checked`);
+      if (!selected) {
+        const row = document.querySelector(`.question[data-q="${i}"]`);
+        if (row) {
+          row.classList.add("invalid");
+          row.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        throw new Error(`Responda o item ${i}.`);
+      }
+    }
+    const lossIntent = document.querySelector('input[name="perda_peso_deliberada"]:checked');
+    if (!lossIntent) {
+      const row = document.querySelector('.question[data-q="19"]');
+      if (row) {
+        row.classList.add("invalid");
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      throw new Error("Responda a pergunta adicional do item 19 sobre tentativa deliberada de perda de peso.");
+    }
+  }
+
+  function collectAnswers() {
+    const answers = {};
+    for (let i = 1; i <= ITEMS.length; i++) {
+      const qn = String(i).padStart(2, "0");
+      const selected = document.querySelector(`input[name="q${qn}"]:checked`);
+      const value = Number(selected?.value);
+      if (![0, 1, 2, 3].includes(value)) throw new Error(`Valor inválido no item ${i}.`);
+      answers[`q${qn}`] = value;
+    }
+    answers.perda_peso_deliberada = document.querySelector('input[name="perda_peso_deliberada"]:checked')?.value || "";
+    return answers;
+  }
+
+  function calculateTotal(answers) {
+    let total = 0;
+    for (let i = 1; i <= ITEMS.length; i++) {
+      const qn = String(i).padStart(2, "0");
+      total += Number(answers[`q${qn}`] || 0);
+    }
+    return total;
+  }
+
+  function buildResultsPayload(answers) {
+    const results = ITEMS.map((item, idx) => {
+      const number = idx + 1;
+      const key = `q${String(number).padStart(2, "0")}`;
+      const value = Number(answers[key]);
+      return {
+        pergunta_numero: number,
+        pergunta: item.titulo,
+        resposta: value,
+        resposta_texto: item.opcoes[value]
+      };
+    });
+    results.push({
+      pergunta_numero: "19a",
+      pergunta: "Você está tentando perder peso deliberadamente, comendo menos?",
+      resposta: answers.perda_peso_deliberada
+    });
+    return results;
+  }
+
+  function buildResultsMetaPayload(total, answers) {
+    return [
+      { key: "bdi_total", label: "BDI Total", order: 1, value: total },
+      { key: "pontuacao_minima", label: "Pontuação mínima", order: 2, value: 0 },
+      { key: "pontuacao_maxima", label: "Pontuação máxima", order: 3, value: 63 },
+      { key: "perda_peso_deliberada", label: "Tentativa deliberada de perda de peso", order: 4, value: answers.perda_peso_deliberada }
+    ];
+  }
+
+  async function validarAcessoAoTeste() {
+    const token = getTokenFromUrl();
+    installPatientTokenAccessShim();
+    const testCode = getTestCodeFromUrl();
+    if (!token) {
+      setStatus("Link inválido ou expirado. Abra o formulário pela área do paciente.", "err");
+      return null;
+    }
+    $("#metaInfo").classList.remove("hidden");
+    $("#metaInfo").innerHTML = `
+      <span>Acesso por token</span>
+      <span>Teste: ${testCode}</span>
+    `;
+    setStatus("Consultando liberação do teste...", "loading");
+    const { data, error } = await supabaseClient
+      .from("patients")
+      .select("cpf, nome, email, tests_liberados, tests_feitos")
+      .eq("cpf", getCpfFromUrl())
+      .maybeSingle();
+    if (error) {
+      console.error(error);
+      setStatus("Erro ao consultar a base de dados.", "err");
+      return null;
+    }
+    if (!data) {
+      setStatus("CPF não encontrado.", "err");
+      return null;
+    }
+    if (!isTestLiberado(data.tests_liberados, testCode)) {
+      setStatus("Teste não liberado.", "warn");
+      return null;
+    }
+    if (isTestFeito(data.tests_feitos, testCode)) {
+      setStatus("Teste já realizado. Redirecionando para a área do paciente...", "ok");
+      setTimeout(redirectToAreaPaciente, 700);
+      return null;
+    }
+    setStatus("Teste liberado. Formulário disponível.", "ok");
+    return data;
+  }
+
+  async function boot() {
+    renderQuestions();
+    restoreDraft();
+    updateProgress();
+    const patient = await validarAcessoAoTeste();
+    if (!patient) return;
+    renderPatientInfo(patient);
+    $("#progressWrap").classList.remove("hidden");
+    $("#testForm").classList.remove("hidden");
+  }
+
+  document.addEventListener("change", event => {
+    if (event.target?.matches('input[type="radio"]')) {
+      const row = event.target.closest(".question");
+      if (row) row.classList.remove("invalid");
+      updateProgress();
+      saveDraft();
+    }
+  });
+
+  $("#clearDraft").addEventListener("click", clearDraft);
+
+  $("#testForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    clearMessage();
+    const btn = $("#submitBtn");
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Enviando...";
+    try {
+      const cpf = getCpfFromUrl();
+      const testCode = getTestCodeFromUrl();
+      const submittedAt = new Date().toISOString();
+      installPatientTokenAccessShim();
+      validateAllAnswered();
+      const answers = collectAnswers();
+      const total = calculateTotal(answers);
+      const resultsPayload = buildResultsPayload(answers);
+      const resultsMetaPayload = buildResultsMetaPayload(total, answers);
+      const { data: patient, error: patientError } = await supabaseClient
+        .from("patients")
+        .select("cpf, tests_liberados, tests_feitos")
+        .eq("cpf", cpf)
+        .maybeSingle();
+      if (patientError) throw new Error("Erro ao consultar paciente.");
+      if (!patient) throw new Error("CPF não encontrado.");
+      if (!isTestLiberado(patient.tests_liberados, testCode)) throw new Error("Teste não liberado.");
+      if (isTestFeito(patient.tests_feitos, testCode)) {
+        redirectToAreaPaciente();
+        return;
+      }
+      const { error: insertError } = await supabaseClient
+        .from("respostas")
+        .insert([{
+          cpf: cpf,
+          code: testCode,
+          submitted_at: submittedAt,
+          results: resultsPayload,
+          results_meta: resultsMetaPayload
+        }]);
+      if (insertError) {
+        console.error("ERRO INSERT respostas:", insertError);
+        throw new Error(`Erro ao salvar respostas: ${insertError.message || ""}`.trim());
+      }
+      const nextTestsFeitos = buildUpdatedTestsFeitos(patient.tests_feitos, testCode, submittedAt);
+      const { error: updateError } = await supabaseClient
+        .from("patients")
+        .update({ tests_feitos: nextTestsFeitos })
+        .eq("cpf", cpf);
+      if (updateError) {
+        console.error(updateError);
+        throw new Error("Resposta salva, mas falhou ao marcar teste como feito.");
+      }
+      localStorage.removeItem(STORAGE_KEY);
+      setStatus("Respostas enviadas com sucesso. Redirecionando...", "ok");
+      setTimeout(redirectToAreaPaciente, 900);
+    } catch (err) {
+      console.error(err);
+      setMessage(err.message || "Falha ao enviar. Tente novamente.", "err");
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  });
+
+  boot();
+</script>
+</body>
+</html>
