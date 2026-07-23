@@ -32,7 +32,6 @@ body {
 }
 
 body {
-  min-width: 320px;
   background:
     linear-gradient(180deg, #ffffff 0%, #ffffff 75%, #f5f7f9 100%);
 }
