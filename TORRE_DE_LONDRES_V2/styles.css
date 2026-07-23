@@ -459,12 +459,24 @@ button {
   height: 82%;
 }
 
+.tower-slot[data-capacity="3"] {
+  --selected-ball-bottom: 84%;
+}
+
 .tower-slot[data-capacity="2"] .peg {
   height: 58%;
 }
 
+.tower-slot[data-capacity="2"] {
+  --selected-ball-bottom: 60%;
+}
+
 .tower-slot[data-capacity="1"] .peg {
   height: 34%;
+}
+
+.tower-slot[data-capacity="1"] {
+  --selected-ball-bottom: 36%;
 }
 
 .ball {
@@ -526,10 +538,23 @@ button {
 }
 
 .ball.selected {
-  transform: translate(-50%, -12%);
+  z-index: 6;
+  animation: lift-ball-from-peg 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   filter: drop-shadow(0 0 8px rgba(32, 37, 104, 0.55));
   outline: 3px solid rgba(32, 37, 104, 0.72);
   outline-offset: 3px;
+}
+
+@keyframes lift-ball-from-peg {
+  from {
+    bottom: calc(var(--level) * 25%);
+    transform: translateX(-50%);
+  }
+
+  to {
+    bottom: var(--selected-ball-bottom);
+    transform: translateX(-50%);
+  }
 }
 
 .tower-slot.destination-ready {
