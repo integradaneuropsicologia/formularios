@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#245d6a">
+  <title>PHQ-9 | Questionário sobre a Saúde do Paciente</title>
+  <link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+  <div id="app">
+    <section id="loadingScreen" class="center-screen">
+      <div class="loading-mark" aria-hidden="true"></div>
+      <p>Validando acesso ao formulário...</p>
+    </section>
+
+    <section id="errorScreen" class="center-screen hidden" aria-live="assertive">
+      <div class="message-panel message-panel--error">
+        <p class="eyebrow">Não foi possível abrir o formulário</p>
+        <h1>Acesso indisponível</h1>
+        <p id="errorText">Confira o link recebido e tente novamente.</p>
+        <a id="errorBackLink" class="button button--secondary" href="https://integradaneuropsicologia.github.io/area-do-paciente-v2/">
+          Voltar à área do paciente
+        </a>
+      </div>
+    </section>
+
+    <section id="formScreen" class="form-screen hidden">
+      <header class="topbar">
+        <div class="topbar__content">
+          <div class="brand">
+            <span class="brand__mark" aria-hidden="true">PH</span>
+            <div>
+              <strong>PHQ-9</strong>
+              <span>Saúde do Paciente</span>
+            </div>
+          </div>
+          <div class="patient-context">
+            <span>Paciente</span>
+            <strong id="patientName">Identificação validada</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="form-main">
+        <section class="form-intro" aria-labelledby="formTitle">
+          <p class="eyebrow">Questionário sobre a Saúde do Paciente</p>
+          <h1 id="formTitle">Como você esteve nas últimas duas semanas?</h1>
+          <p>Escolha a frequência com que cada problema incomodou você e responda à pergunta final sobre o impacto dessas dificuldades.</p>
+        </section>
+
+        <div class="progress-region" aria-live="polite">
+          <div class="progress-copy">
+            <span>Progresso</span>
+            <strong id="progressText">0 de 10 respondidos</strong>
+          </div>
+          <div
+            id="progressTrack"
+            class="progress-track"
+            role="progressbar"
+            aria-valuemin="0"
+            aria-valuemax="10"
+            aria-valuenow="0"
+          >
+            <div id="progressBar" class="progress-fill"></div>
+          </div>
+        </div>
+
+        <form id="questionnaire" novalidate>
+          <div id="questionList" class="question-list"></div>
+
+          <div class="submit-region">
+            <div>
+              <strong id="completionText">Responda aos 10 itens</strong>
+              <p id="formStatus" class="form-status" aria-live="assertive"></p>
+            </div>
+            <button id="submitButton" class="button button--primary" type="submit">
+              Enviar respostas
+            </button>
+          </div>
+        </form>
+      </main>
+    </section>
+
+    <section id="successScreen" class="center-screen hidden">
+      <div class="message-panel message-panel--success">
+        <div class="success-symbol" aria-hidden="true">✓</div>
+        <p class="eyebrow">Formulário concluído</p>
+        <h1>Respostas registradas</h1>
+        <p id="successText">O preenchimento foi salvo com sucesso.</p>
+        <p id="successStatus" class="send-status" aria-live="polite"></p>
+        <button id="successBackButton" class="button button--secondary" type="button">
+          Voltar à área do paciente
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="data.js?v=1"></script>
+  <script src="access.js?v=1"></script>
+  <script src="scoring.js?v=1"></script>
+  <script src="script.js?v=1"></script>
+</body>
+</html>
