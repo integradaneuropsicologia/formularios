@@ -4,7 +4,19 @@ const SUPABASE_URL = "https://ydypdeafbcdcamwigjuq.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_lg9teAniku65cd2dnZJvIQ_Zii0XneZ";
 const TEST_CODE_FIXO = "TORRE_DE_LONDRES_V2";
 const AREA_PACIENTE_URL = "https://integradaneuropsicologia.github.io/area-do-paciente-v2/";
-const MAX_ATTEMPTS = 3;
+
+if (!window.TOLScoring) {
+  throw new Error("As regras de correção da Torre de Londres não foram carregadas.");
+}
+
+const {
+  MAX_ATTEMPTS,
+  MAX_SCORE,
+  MINIMUM_MOVES,
+  buildResultsMetaPayload: buildScoringResultsMetaPayload,
+  calculateAgeYears,
+  isCorrectSolution
+} = window.TOLScoring;
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -94,8 +106,10 @@ const state = {
   solved: 0,
   itemResults: [],
   attemptResults: [],
+  currentMoveSequence: [],
   testStartedAt: null,
   attemptStartedAt: null,
+  firstMoveAt: null,
   sending: false,
   finished: false
 };
@@ -103,8 +117,12 @@ const state = {
 const tasks = TASK_TARGETS.map((target, index) => ({
   number: index + 1,
   target: cloneBoard(target),
-  moveLimit: shortestMoveCount(INITIAL_STATE, target)
+  moveLimit: MINIMUM_MOVES[index]
 }));
+
+if (tasks.length !== MINIMUM_MOVES.length) {
+  throw new Error("A quantidade de problemas não corresponde à tabela de correção.");
+}
 
 function $(selector) {
   return document.querySelector(selector);
@@ -120,36 +138,6 @@ function boardKey(board) {
 
 function sameBoard(first, second) {
   return boardKey(first) === boardKey(second);
-}
-
-function shortestMoveCount(start, target) {
-  const targetKey = boardKey(target);
-  const queue = [{ board: cloneBoard(start), distance: 0 }];
-  const visited = new Set([boardKey(start)]);
-
-  while (queue.length) {
-    const current = queue.shift();
-    if (boardKey(current.board) === targetKey) return current.distance;
-
-    for (let from = 0; from < PEG_CAPACITIES.length; from++) {
-      if (!current.board[from].length) continue;
-
-      for (let to = 0; to < PEG_CAPACITIES.length; to++) {
-        if (from === to || current.board[to].length >= PEG_CAPACITIES[to]) continue;
-
-        const next = cloneBoard(current.board);
-        next[to].push(next[from].pop());
-        const nextKey = boardKey(next);
-
-        if (!visited.has(nextKey)) {
-          visited.add(nextKey);
-          queue.push({ board: next, distance: current.distance + 1 });
-        }
-      }
-    }
-  }
-
-  throw new Error("Configuração de objetivo inválida.");
 }
 
 function createBoardElement(boardState, options = {}) {
@@ -280,7 +268,9 @@ function resetAttempt() {
   state.board = cloneBoard(INITIAL_STATE);
   state.moves = 0;
   state.selectedPeg = null;
+  state.currentMoveSequence = [];
   state.attemptStartedAt = Date.now();
+  state.firstMoveAt = null;
   setFeedback("Selecione uma bola e depois o pino de destino.");
   renderGame();
 }
@@ -341,16 +331,40 @@ function moveSelectedBall(destinationPeg) {
     return;
   }
 
+  if (state.moves === 0) {
+    state.firstMoveAt = Date.now();
+  }
+
   const color = state.board[sourcePeg].pop();
   state.board[destinationPeg].push(color);
   state.selectedPeg = null;
   state.moves += 1;
+  state.currentMoveSequence.push({
+    movimento: state.moves,
+    cor: color,
+    origem: sourcePeg + 1,
+    destino: destinationPeg + 1
+  });
   renderGame();
 
   const task = tasks[state.taskIndex];
-  if (sameBoard(state.board, task.target)) {
+  const goalReached = sameBoard(state.board, task.target);
+
+  if (isCorrectSolution({
+    goalReached,
+    moves: state.moves,
+    problemIndex: state.taskIndex
+  })) {
     setFeedback("Objetivo alcançado.", "selected");
     completeCurrentTask();
+    return;
+  }
+
+  if (goalReached && state.moves < task.moveLimit) {
+    setFeedback(
+      `A configuração foi montada em ${state.moves} movimento(s). A correção deste problema requer ${task.moveLimit}; continue planejando.`,
+      "selected"
+    );
     return;
   }
 
@@ -372,8 +386,14 @@ function recordAttempt(outcome) {
   state.attemptResults.push({
     tentativa: state.attempt,
     movimentos: state.moves,
+    movimentos_minimos_esperados: tasks[state.taskIndex].moveLimit,
+    tempo_planejamento_segundos: state.firstMoveAt
+      ? Math.max(0, Math.round((state.firstMoveAt - state.attemptStartedAt) / 1000))
+      : elapsedSeconds(state.attemptStartedAt),
     tempo_segundos: elapsedSeconds(state.attemptStartedAt),
-    resultado: outcome
+    resultado: outcome,
+    configuracao_final: cloneBoard(state.board),
+    sequencia_movimentos: state.currentMoveSequence.map(move => ({ ...move }))
   });
 }
 
@@ -385,8 +405,10 @@ function completeCurrentTask() {
   state.itemResults.push({
     item: state.taskIndex + 1,
     concluido: true,
+    correto_no_minimo_esperado: true,
     pontuacao: points,
     limite_movimentos: tasks[state.taskIndex].moveLimit,
+    movimentos_minimos_esperados: tasks[state.taskIndex].moveLimit,
     tentativas_usadas: state.attempt,
     movimentos_na_tentativa_final: state.moves,
     tempo_total_segundos: state.attemptResults.reduce((total, item) => total + item.tempo_segundos, 0),
@@ -422,8 +444,10 @@ function failCurrentAttempt() {
   state.itemResults.push({
     item: state.taskIndex + 1,
     concluido: false,
+    correto_no_minimo_esperado: false,
     pontuacao: 0,
     limite_movimentos: tasks[state.taskIndex].moveLimit,
+    movimentos_minimos_esperados: tasks[state.taskIndex].moveLimit,
     tentativas_usadas: MAX_ATTEMPTS,
     movimentos_na_tentativa_final: state.moves,
     tempo_total_segundos: state.attemptResults.reduce((total, item) => total + item.tempo_segundos, 0),
@@ -472,7 +496,7 @@ function finishTest() {
   state.finished = true;
   $("#gameScreen").classList.add("hidden");
   $("#finalScreen").classList.remove("hidden");
-  $("#finalScore").textContent = `${state.score} / ${tasks.length * MAX_ATTEMPTS}`;
+  $("#finalScore").textContent = `${state.score} / ${MAX_SCORE}`;
   $("#finalSolved").textContent = `${state.solved} / ${tasks.length}`;
   $("#finalSummary").textContent = "O desempenho bruto foi concluído e será disponibilizado ao profissional responsável.";
   submitResults();
@@ -680,6 +704,7 @@ async function validateAccess() {
     return {
       cpf: "00000000000",
       nome: "Modo de demonstração",
+      data_nascimento: "2000-01-01",
       tests_liberados: { [TEST_CODE_FIXO]: true },
       tests_feitos: {}
     };
@@ -693,7 +718,7 @@ async function validateAccess() {
   installPatientTokenAccessShim();
   const { data, error } = await supabaseClient
     .from("patients")
-    .select("cpf, nome, tests_liberados, tests_feitos")
+    .select("cpf, nome, data_nascimento, tests_liberados, tests_feitos")
     .eq("cpf", getCpfFromUrl())
     .maybeSingle();
 
@@ -725,16 +750,11 @@ function buildResultsPayload() {
 }
 
 function buildResultsMetaPayload() {
-  return [
-    { key: "pontuacao_maxima", label: "Pontuação máxima", order: 1, value: tasks.length * MAX_ATTEMPTS },
-    { key: "problemas_total", label: "Total de problemas", order: 2, value: tasks.length },
-    {
-      key: "desempenho_por_problema",
-      label: "Desempenho por problema",
-      order: 3,
-      value: state.itemResults.map(item => ({ ...item }))
-    }
-  ];
+  return buildScoringResultsMetaPayload({
+    totalScore: state.score,
+    ageYears: calculateAgeYears(state.patient?.data_nascimento),
+    itemResults: state.itemResults
+  });
 }
 
 async function submitResults() {
