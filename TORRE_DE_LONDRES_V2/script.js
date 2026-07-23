@@ -2,12 +2,17 @@
 
 const SUPABASE_URL = "https://ydypdeafbcdcamwigjuq.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_lg9teAniku65cd2dnZJvIQ_Zii0XneZ";
-const TEST_CODE_FIXO = "TORRE_DE_LONDRES_V2";
-const AREA_PACIENTE_URL = "https://integradaneuropsicologia.github.io/area-do-paciente-v2/";
 
-if (!window.TOLScoring) {
-  throw new Error("As regras de correção da Torre de Londres não foram carregadas.");
+if (!window.TOLAccess || !window.TOLScoring) {
+  throw new Error("Os módulos da Torre de Londres não foram carregados.");
 }
+
+const {
+  FORM_CODE: TEST_CODE_FIXO,
+  buildPatientAreaUrl,
+  fetchPatientAccess,
+  submitPatientResponse
+} = window.TOLAccess;
 
 const {
   MAX_ATTEMPTS,
@@ -502,192 +507,14 @@ function finishTest() {
   submitResults();
 }
 
-function normalizeCPF(cpf) {
-  return String(cpf || "").replace(/\D/g, "");
-}
-
-function getTokenFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  return String(params.get("token") || params.get("t") || "").trim();
-}
-
-function getTestCodeFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  return String(params.get("form") || params.get("code") || TEST_CODE_FIXO).trim();
-}
-
-function getCpfFromUrl() {
-  if (window.__patientFormAccess?.cpf) return normalizeCPF(window.__patientFormAccess.cpf);
-  return "";
-}
-
-function isObject(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function containsTestCode(value, testCode) {
-  if (!value) return false;
-  if (typeof value === "string") return value === testCode;
-  if (Array.isArray(value)) {
-    return value.some(item => {
-      if (typeof item === "string") return item === testCode;
-      if (!isObject(item)) return false;
-      return item.code === testCode ||
-        item.test_code === testCode ||
-        item.id === testCode ||
-        containsTestCode(item, testCode);
-    });
-  }
-  if (isObject(value)) {
-    if (Object.prototype.hasOwnProperty.call(value, testCode)) {
-      const entry = value[testCode];
-      return entry !== false && entry !== null && entry !== undefined;
-    }
-    if (value.code === testCode || value.test_code === testCode || value.id === testCode) return true;
-    return Object.values(value).some(item => containsTestCode(item, testCode));
-  }
-  return false;
-}
-
-function isTestLiberado(testsLiberados, testCode) {
-  if (!containsTestCode(testsLiberados, testCode)) return false;
-  if (isObject(testsLiberados) && Object.prototype.hasOwnProperty.call(testsLiberados, testCode)) {
-    const entry = testsLiberados[testCode];
-    if (typeof entry === "boolean") return entry;
-    if (isObject(entry) && "liberado" in entry) return Boolean(entry.liberado);
-    if (typeof entry === "string") return !["false", "0", "nao", "não"].includes(entry.toLowerCase());
-    return Boolean(entry);
-  }
-  return true;
-}
-
-function isTestFeito(testsFeitos, testCode) {
-  if (!containsTestCode(testsFeitos, testCode)) return false;
-  if (isObject(testsFeitos) && Object.prototype.hasOwnProperty.call(testsFeitos, testCode)) {
-    const entry = testsFeitos[testCode];
-    if (typeof entry === "boolean") return entry;
-    if (isObject(entry) && "feito" in entry) return Boolean(entry.feito);
-    if (typeof entry === "string") return !["false", "0", "nao", "não"].includes(entry.toLowerCase());
-    return Boolean(entry);
-  }
-  return true;
-}
-
-function normalizeTestsFeitosForSave(current) {
-  const normalized = {};
-  if (!current) return normalized;
-
-  if (typeof current === "string") {
-    normalized[current] = { feito: true };
-    return normalized;
-  }
-
-  if (Array.isArray(current)) {
-    current.forEach(item => {
-      if (typeof item === "string") {
-        normalized[item] = { feito: true };
-      } else if (isObject(item)) {
-        const code = item.code || item.test_code || item.id;
-        if (code) normalized[code] = { ...item, feito: "feito" in item ? Boolean(item.feito) : true };
-      }
-    });
-    return normalized;
-  }
-
-  if (isObject(current)) {
-    Object.entries(current).forEach(([key, value]) => {
-      if (typeof value === "boolean") {
-        normalized[key] = { feito: value };
-      } else if (typeof value === "string") {
-        normalized[key] = { feito: !["false", "0", "nao", "não"].includes(value.toLowerCase()) };
-      } else if (isObject(value)) {
-        normalized[key] = { ...value };
-      } else {
-        normalized[key] = { feito: Boolean(value) };
-      }
-    });
-  }
-
-  return normalized;
-}
-
-function buildUpdatedTestsFeitos(currentTestsFeitos, testCode, submittedAt) {
-  const next = normalizeTestsFeitosForSave(currentTestsFeitos);
-  next[testCode] = {
-    ...(isObject(next[testCode]) ? next[testCode] : {}),
-    feito: true,
-    submitted_at: submittedAt
-  };
-  return next;
-}
-
 function redirectToAreaPaciente() {
-  const token = getTokenFromUrl();
-  window.location.href = token
-    ? `${AREA_PACIENTE_URL}?token=${encodeURIComponent(token)}`
-    : AREA_PACIENTE_URL;
+  window.location.replace(buildPatientAreaUrl(window.location.search));
 }
 
 function isLocalDemo() {
   const localHosts = new Set(["localhost", "127.0.0.1"]);
   return localHosts.has(window.location.hostname) &&
     new URLSearchParams(window.location.search).get("demo") === "1";
-}
-
-async function getPatientFormAccessByToken() {
-  const token = getTokenFromUrl();
-  const testCode = getTestCodeFromUrl();
-
-  if (!token || !testCode) {
-    return { data: null, error: new Error("Link inválido ou formulário não informado.") };
-  }
-
-  if (window.__patientFormAccess && window.__patientFormAccess.form_code === testCode) {
-    return { data: window.__patientFormAccess, error: null };
-  }
-
-  if (!window.__patientFormAccessPromise) {
-    window.__patientFormAccessPromise = supabaseClient
-      .rpc("get_public_patient_form_access", {
-        p_token: token,
-        p_form_code: testCode
-      })
-      .then(({ data, error }) => {
-        if (error) return { data: null, error };
-        const row = Array.isArray(data) ? data[0] : data;
-        window.__patientFormAccess = row || null;
-        return { data: row || null, error: null };
-      });
-  }
-
-  return window.__patientFormAccessPromise;
-}
-
-function installPatientTokenAccessShim() {
-  if (!supabaseClient || supabaseClient.__patientTokenAccessShim) return;
-  const originalFrom = supabaseClient.from.bind(supabaseClient);
-
-  supabaseClient.from = function(table) {
-    if (table !== "patients") return originalFrom(table);
-
-    const selectBuilder = {
-      select() { return this; },
-      eq() { return this; },
-      maybeSingle() { return getPatientFormAccessByToken(); },
-      single() { return getPatientFormAccessByToken(); }
-    };
-
-    return {
-      select() { return selectBuilder; },
-      update() {
-        return {
-          eq: async () => ({ data: null, error: null })
-        };
-      }
-    };
-  };
-
-  supabaseClient.__patientTokenAccessShim = true;
 }
 
 function showAppError(message) {
@@ -710,25 +537,8 @@ async function validateAccess() {
     };
   }
 
-  const token = getTokenFromUrl();
-  const testCode = getTestCodeFromUrl();
-  if (!token) throw new Error("Link inválido ou expirado. Abra o teste pela área do paciente.");
-  if (testCode !== TEST_CODE_FIXO) throw new Error("O link recebido pertence a outro formulário.");
-
-  installPatientTokenAccessShim();
-  const { data, error } = await supabaseClient
-    .from("patients")
-    .select("cpf, nome, data_nascimento, tests_liberados, tests_feitos")
-    .eq("cpf", getCpfFromUrl())
-    .maybeSingle();
-
-  if (error) {
-    console.error(error);
-    throw new Error("Não foi possível validar o acesso. Tente novamente em instantes.");
-  }
-  if (!data) throw new Error("Paciente não encontrado para este link.");
-  if (!isTestLiberado(data.tests_liberados, testCode)) throw new Error("Este teste não está liberado.");
-  if (isTestFeito(data.tests_feitos, testCode)) {
+  const data = await fetchPatientAccess(supabaseClient, window.location.search);
+  if (data.already_done) {
     redirectToAreaPaciente();
     return null;
   }
@@ -769,44 +579,13 @@ async function submitResults() {
   $("#sendStatus").textContent = "Salvando resultado...";
 
   try {
-    installPatientTokenAccessShim();
-    const cpf = getCpfFromUrl();
-    const testCode = getTestCodeFromUrl();
-    const submittedAt = new Date().toISOString();
-
-    if (!cpf) throw new Error("CPF inválido para o envio.");
     if (!state.patient) throw new Error("Sessão do teste inválida.");
 
-    const { error: insertError } = await supabaseClient
-      .from("respostas")
-      .insert([{
-        cpf,
-        code: testCode,
-        submitted_at: submittedAt,
-        results: buildResultsPayload(),
-        results_meta: buildResultsMetaPayload()
-      }]);
-
-    if (insertError) {
-      console.error(insertError);
-      throw new Error(`Erro ao salvar resultado: ${insertError.message || "falha desconhecida"}`);
-    }
-
-    const nextTestsFeitos = buildUpdatedTestsFeitos(
-      state.patient.tests_feitos,
-      testCode,
-      submittedAt
-    );
-
-    const { error: updateError } = await supabaseClient
-      .from("patients")
-      .update({ tests_feitos: nextTestsFeitos })
-      .eq("cpf", cpf);
-
-    if (updateError) {
-      console.error(updateError);
-      throw new Error("Resultado salvo, mas não foi possível marcar o teste como concluído.");
-    }
+    await submitPatientResponse(supabaseClient, {
+      search: window.location.search,
+      results: buildResultsPayload(),
+      resultsMeta: buildResultsMetaPayload()
+    });
 
     $("#sendStatus").textContent = "Resultado enviado com sucesso. Redirecionando...";
     setTimeout(redirectToAreaPaciente, 1200);
