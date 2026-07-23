@@ -54,7 +54,7 @@ test("comportamento adaptativo começa aos 6 meses", () => {
   assert.equal(getQuestionnaire(data, 6).domains.some((domain) => domain.code === "CA"), true);
 });
 
-test("pontua respostas por domínio e preserva não observado", () => {
+test("envia pergunta, resposta e comentário, com pontuação bruta por domínio", () => {
   const questionnaire = getQuestionnaire(data, 4);
   const responses = {};
   const comments = {};
@@ -77,16 +77,14 @@ test("pontua respostas por domínio e preserva não observado", () => {
 
   const results = buildResultsPayload(scored);
   assert.equal(results.length, questionnaire.totalQuestions);
-  assert.ok(results.some((row) => row.resposta === "Não observado" && row.pontuacao === null));
-
-  const meta = buildResultsMetaPayload({
-    data,
-    questionnaire,
-    scored,
-    referenceDate: "2026-07-23T12:00:00.000Z"
+  assert.ok(results.some((row) => row.resposta === "Não observado"));
+  results.forEach((row) => {
+    assert.deepEqual(Object.keys(row).sort(), ["comentario", "pergunta", "resposta"]);
   });
-  assert.equal(meta.idade_meses, 4);
-  assert.equal(meta.preenchimento_completo, true);
+  assert.ok(results.some((row) => row.comentario === "Ainda não foi possível observar."));
+
+  const meta = buildResultsMetaPayload({ scored });
+  assert.deepEqual(Object.keys(meta), ["pontuacoes_brutas"]);
   assert.equal(Object.keys(meta.pontuacoes_brutas).length, questionnaire.domains.length);
 });
 

@@ -124,13 +124,9 @@
         }
 
         rows.push({
-          codigo_item: question.code,
-          dominio_codigo: question.domainCode,
-          dominio: question.domain,
           pergunta: question.text,
           resposta: option?.label || null,
-          pontuacao: Number.isFinite(option?.score) ? Number(option.score) : null,
-          comentario: comment || (option?.value === "nao_observado" ? "Não observado" : null)
+          comentario: comment || null
         });
       });
 
@@ -174,39 +170,11 @@
     return scored.rows.map((row) => ({ ...row }));
   }
 
-  function buildResultsMetaPayload({
-    data,
-    questionnaire,
-    scored,
-    referenceDate = new Date()
-  }) {
-    const date = referenceDate instanceof Date
-      ? referenceDate.toISOString()
-      : String(referenceDate);
-
+  function buildResultsMetaPayload({ scored }) {
     return {
-      instrumento: "IDADI",
-      formulario: data.formCode,
-      versao_estrutura: data.schemaVersion,
-      caderno: questionnaire.booklet,
-      idade_meses: questionnaire.ageMonths,
-      data_aplicacao: date,
-      escala_pontuacao: {
-        Sim: 2,
-        "Às vezes": 1,
-        "Ainda não": 0,
-        "Não observado": null
-      },
-      total_itens_apresentados: questionnaire.totalQuestions,
-      total_itens_marcados: scored.answeredCount,
-      total_itens_pontuados: scored.observedCount,
-      total_itens_nao_observados: scored.notObservedCount,
-      preenchimento_completo: scored.complete,
       pontuacoes_brutas: Object.fromEntries(
         scored.domainResults.map((domain) => [domain.dominio, domain.pontuacao_bruta])
-      ),
-      resultados_por_dominio: scored.domainResults.map((domain) => ({ ...domain })),
-      tipo_resultado: "Pontuação bruta por domínio"
+      )
     };
   }
 

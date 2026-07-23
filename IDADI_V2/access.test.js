@@ -58,14 +58,26 @@ test("envia results e results_meta pelo RPC público", async () => {
 
   await access.submitPatientResponse(client, {
     search: "?token=token-valido&form=IDADI_V2",
-    results: [{ codigo_item: "C1", resposta: "Sim", pontuacao: 2 }],
-    resultsMeta: { idade_meses: 24, pontuacoes_brutas: { Cognitivo: 20 } }
+    results: [{
+      pergunta: "Olha para objetos próximos.",
+      resposta: "Sim",
+      comentario: "Observação opcional."
+    }],
+    resultsMeta: { pontuacoes_brutas: { Cognitivo: 20 } }
   });
 
   assert.equal(calls[0].name, "submit_public_patient_form_response");
   assert.equal(calls[0].payload.p_form_code, "IDADI_V2");
-  assert.equal(calls[0].payload.p_results[0].codigo_item, "C1");
-  assert.equal(calls[0].payload.p_results_meta.idade_meses, 24);
+  assert.deepEqual(calls[0].payload.p_results, [
+    {
+      pergunta: "Olha para objetos próximos.",
+      resposta: "Sim",
+      comentario: "Observação opcional."
+    }
+  ]);
+  assert.deepEqual(calls[0].payload.p_results_meta, {
+    pontuacoes_brutas: { Cognitivo: 20 }
+  });
 });
 
 test("retorna à área do paciente preservando o token", () => {

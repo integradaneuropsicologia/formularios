@@ -434,11 +434,7 @@ async function submitForm() {
   $("#domainStatus").textContent = "Enviando respostas...";
 
   const results = buildResultsPayload(scored);
-  const resultsMeta = buildResultsMetaPayload({
-    data,
-    questionnaire: state.questionnaire,
-    scored
-  });
+  const resultsMeta = buildResultsMetaPayload({ scored });
 
   try {
     if (state.demo) {
