@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Torre de Londres</title>
+  <link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+  <div id="app">
+    <section id="loadingScreen" class="center-screen">
+      <div class="loading-mark" aria-hidden="true"></div>
+      <p id="loadingText">Validando acesso ao teste...</p>
+    </section>
+
+    <section id="errorScreen" class="center-screen hidden" aria-live="assertive">
+      <div class="message-panel message-panel--error">
+        <p class="eyebrow">Não foi possível abrir o teste</p>
+        <h1>Acesso indisponível</h1>
+        <p id="errorText">Confira o link recebido e tente novamente.</p>
+        <a class="button button--secondary" href="https://integradaneuropsicologia.github.io/area-do-paciente-v2/">
+          Voltar à área do paciente
+        </a>
+      </div>
+    </section>
+
+    <section id="tutorialScreen" class="test-shell hidden">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Tarefa de planejamento</p>
+          <h1>Torre de Londres</h1>
+        </div>
+        <p id="tutorialPatientName" class="patient-name"></p>
+      </header>
+
+      <main class="tutorial-main">
+        <div class="instruction-copy">
+          <p id="tutorialText"></p>
+          <button id="tutorialNextButton" class="button button--primary" type="button">
+            <span id="tutorialButtonText">Continuar</span>
+            <span class="button-arrow" aria-hidden="true">›</span>
+          </button>
+        </div>
+
+        <div class="tutorial-stage">
+          <div class="board-column">
+            <div id="tutorialBoard" class="board board--large" aria-label="Tabuleiro de demonstração"></div>
+          </div>
+
+          <div id="tutorialObjectiveWrap" class="objective-column hidden">
+            <p class="objective-label">Objetivo</p>
+            <div id="tutorialObjective" class="board board--compact" aria-label="Exemplo de objetivo"></div>
+          </div>
+        </div>
+
+        <div id="tutorialSteps" class="step-dots" aria-label="Progresso das instruções"></div>
+      </main>
+    </section>
+
+    <section id="gameScreen" class="test-shell hidden">
+      <header class="topbar topbar--game">
+        <div>
+          <p class="eyebrow">Torre de Londres</p>
+          <h1 id="taskTitle">Tarefa 1</h1>
+        </div>
+        <div class="progress-copy">
+          <strong id="taskProgress">1 de 19</strong>
+          <span id="gamePatientName"></span>
+        </div>
+      </header>
+
+      <div class="progress-track" aria-hidden="true">
+        <div id="progressBar" class="progress-fill"></div>
+      </div>
+
+      <main class="game-main">
+        <section class="play-area" aria-labelledby="yourBoardLabel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Monte a configuração</p>
+              <h2 id="yourBoardLabel">Seu tabuleiro</h2>
+            </div>
+            <div class="metrics" aria-label="Informações da tarefa">
+              <div>
+                <span>Movimentos</span>
+                <strong id="movesMetric">0 / 3</strong>
+              </div>
+              <div>
+                <span>Tentativa</span>
+                <strong id="attemptMetric">1 / 3</strong>
+              </div>
+            </div>
+          </div>
+
+          <div id="userBoard" class="board board--large" aria-label="Seu tabuleiro interativo"></div>
+          <p id="gameFeedback" class="game-feedback" aria-live="polite">
+            Selecione uma bola e depois o pino de destino.
+          </p>
+        </section>
+
+        <aside class="goal-area" aria-labelledby="goalLabel">
+          <p id="goalLabel" class="objective-label">Objetivo</p>
+          <div id="goalBoard" class="board board--compact" aria-label="Configuração objetivo"></div>
+          <p class="goal-note">Reproduza esta posição usando o menor número de movimentos.</p>
+        </aside>
+      </main>
+    </section>
+
+    <section id="finalScreen" class="center-screen hidden">
+      <div class="final-layout">
+        <div class="final-symbol" aria-hidden="true">✓</div>
+        <p class="eyebrow">Teste concluído</p>
+        <h1>Resultado registrado</h1>
+        <p id="finalSummary"></p>
+        <div class="final-stats">
+          <div>
+            <span>Pontuação</span>
+            <strong id="finalScore">0 / 57</strong>
+          </div>
+          <div>
+            <span>Problemas resolvidos</span>
+            <strong id="finalSolved">0 / 19</strong>
+          </div>
+        </div>
+        <p id="sendStatus" class="send-status" aria-live="polite"></p>
+        <button id="retrySendButton" class="button button--primary hidden" type="button">
+          Tentar enviar novamente
+          <span class="button-arrow" aria-hidden="true">›</span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div id="dialogBackdrop" class="dialog-backdrop hidden">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+      <p id="dialogEyebrow" class="eyebrow"></p>
+      <h2 id="dialogTitle"></h2>
+      <p id="dialogText"></p>
+      <button id="dialogButton" class="button button--primary" type="button">
+        <span id="dialogButtonText"></span>
+        <span class="button-arrow" aria-hidden="true">›</span>
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script.js?v=1"></script>
+</body>
+</html>
