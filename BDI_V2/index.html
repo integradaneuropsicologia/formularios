@@ -784,26 +784,20 @@
       const key = `q${String(number).padStart(2, "0")}`;
       const value = Number(answers[key]);
       return {
-        pergunta_numero: number,
         pergunta: item.titulo,
-        resposta: value,
-        resposta_texto: item.opcoes[value]
+        resposta: item.opcoes[value]
       };
     });
     results.push({
-      pergunta_numero: "19a",
       pergunta: "Você está tentando perder peso deliberadamente, comendo menos?",
-      resposta: answers.perda_peso_deliberada
+      resposta: answers.perda_peso_deliberada === "sim" ? "Sim" : "Não"
     });
     return results;
   }
 
-  function buildResultsMetaPayload(total, answers) {
+  function buildResultsMetaPayload(total) {
     return [
-      { key: "bdi_total", label: "BDI Total", order: 1, value: total },
-      { key: "pontuacao_minima", label: "Pontuação mínima", order: 2, value: 0 },
-      { key: "pontuacao_maxima", label: "Pontuação máxima", order: 3, value: 63 },
-      { key: "perda_peso_deliberada", label: "Tentativa deliberada de perda de peso", order: 4, value: answers.perda_peso_deliberada }
+      { key: "bdi_total", label: "BDI Total", order: 1, value: total }
     ];
   }
 
@@ -886,7 +880,7 @@
       const answers = collectAnswers();
       const total = calculateTotal(answers);
       const resultsPayload = buildResultsPayload(answers);
-      const resultsMetaPayload = buildResultsMetaPayload(total, answers);
+      const resultsMetaPayload = buildResultsMetaPayload(total);
       const { data: patient, error: patientError } = await supabaseClient
         .from("patients")
         .select("cpf, tests_liberados, tests_feitos")
