@@ -549,65 +549,142 @@ h4 {
   width: 100%;
 }
 
-.conclusion-fieldset {
-  margin: 26px 0 0;
-  padding: 0;
-  border: 0;
+.normative-result {
+  margin-top: 26px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
 }
 
-.conclusion-fieldset legend {
-  margin-bottom: 8px;
+.normative-result__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.normative-result__heading h3 {
+  margin: 3px 0 0;
+  font-size: 1.08rem;
+}
+
+.classification-badge {
+  max-width: 280px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  color: #43545b;
+  background: var(--surface-soft);
+  font-size: 0.78rem;
   font-weight: 800;
+  text-align: center;
 }
 
-.conclusion-fieldset > p {
-  max-width: 760px;
-  margin: 0 0 14px;
-  color: var(--muted);
-  font-size: 0.85rem;
-  line-height: 1.5;
+.classification-badge[data-classification="com_risco"] {
+  border-color: #d48b7a;
+  color: #8f2f20;
+  background: #fff0eb;
 }
 
-.conclusion-fieldset--missing {
-  padding: 12px;
-  border: 1px solid var(--danger);
-  border-radius: 6px;
-  background: var(--danger-soft);
+.classification-badge[data-classification="risco_relativo"] {
+  border-color: #d5b35e;
+  color: #705214;
+  background: #fff8df;
 }
 
-.conclusion-options {
+.classification-badge[data-classification="sem_risco"] {
+  border-color: #81b69b;
+  color: #185f3b;
+  background: #eaf6ef;
+}
+
+.classification-badge[data-classification="nao_calculavel"] {
+  border-color: #d48b7a;
+  color: #8f2f20;
+  background: #fff3f1;
+}
+
+.result-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.conclusion-option {
-  min-height: 54px;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid var(--line-strong);
+  gap: 1px;
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid var(--line);
   border-radius: 6px;
+  background: var(--line);
+}
+
+.result-metrics > div {
+  min-height: 78px;
+  padding: 14px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
   background: var(--surface);
-  cursor: pointer;
 }
 
-.conclusion-option:has(input:checked) {
-  border-color: var(--primary);
-  background: var(--primary-soft);
+.result-metrics span {
+  color: var(--muted);
+  font-size: 0.75rem;
 }
 
-.conclusion-option input {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 18px;
-  accent-color: var(--primary);
+.result-metrics strong {
+  font-size: 0.88rem;
+  line-height: 1.35;
 }
 
-.conclusion-option span {
-  font-size: 0.86rem;
+.critical-criteria-preview {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.critical-criterion {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.8fr) minmax(240px, 1fr) minmax(240px, 1.25fr);
+  gap: 14px;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.critical-criterion > div {
+  display: grid;
+  gap: 2px;
+}
+
+.critical-criterion > div span,
+.critical-criterion > span:not(.critical-criterion__status) {
+  color: var(--muted);
+}
+
+.critical-criterion__status {
   font-weight: 700;
+}
+
+.critical-criterion[data-criterion="criterio_de_risco"] .critical-criterion__status {
+  color: #9d3827;
+}
+
+.critical-criterion[data-criterion="criterio_sem_risco"] .critical-criterion__status {
+  color: #19623d;
+}
+
+.interpretation-preview {
+  max-width: 900px;
+  margin: 18px 0 0;
+  color: #31464e;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.normative-note {
+  max-width: 900px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
 }
 
 .submit-region {
@@ -739,8 +816,12 @@ h4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .conclusion-options {
-    grid-template-columns: 1fr;
+  .critical-criterion {
+    grid-template-columns: minmax(150px, 0.8fr) minmax(210px, 1fr);
+  }
+
+  .critical-criterion__status {
+    grid-column: 1 / -1;
   }
 }
 
@@ -803,6 +884,29 @@ h4 {
   .progress-copy {
     display: grid;
     gap: 3px;
+  }
+
+  .normative-result__heading {
+    display: grid;
+  }
+
+  .classification-badge {
+    width: 100%;
+    max-width: none;
+    text-align: left;
+  }
+
+  .result-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .critical-criterion {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .critical-criterion__status {
+    grid-column: auto;
   }
 
   .question-item {

@@ -378,28 +378,6 @@ function renderQuestions() {
   });
 }
 
-function renderConclusionOptions() {
-  const host = $("#conclusionOptions");
-  host.replaceChildren();
-
-  data.conclusions.forEach((conclusion) => {
-    const label = document.createElement("label");
-    label.className = "conclusion-option";
-
-    const input = document.createElement("input");
-    input.type = "radio";
-    input.name = "conclusion";
-    input.value = conclusion.value;
-    input.checked = state.responses.conclusion === conclusion.value;
-
-    const text = document.createElement("span");
-    text.textContent = conclusion.label;
-
-    label.append(input, text);
-    host.append(label);
-  });
-}
-
 function getObservationState(itemId, scope, sessionIndex) {
   const item = state.responses.items[itemId];
   return scope === "compiled"
@@ -469,6 +447,67 @@ function syncAllObservationControls() {
   });
 }
 
+function renderCriticalCriteria(scored) {
+  const host = $("#criticalCriteriaPreview");
+  host.replaceChildren();
+
+  scored.criticalItems.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "critical-criterion";
+    row.dataset.criterion = item.criterion.key;
+
+    const identity = document.createElement("div");
+    const code = document.createElement("strong");
+    code.textContent = item.code;
+    const title = document.createElement("span");
+    title.textContent = item.title;
+    identity.append(code, title);
+
+    const values = document.createElement("span");
+    const frequency = item.frequencyLabel
+      ? `${item.frequencyLabel} (${item.frequency})`
+      : "não pontuada";
+    values.textContent = item.quality
+      ? `Qualidade ${item.quality} | Escore ${item.qualityScore ?? "não calculável"} | Frequência ${frequency}`
+      : "Codificação compilada pendente";
+
+    const criterion = document.createElement("span");
+    criterion.className = "critical-criterion__status";
+    criterion.textContent = item.criterion.label;
+
+    row.append(identity, values, criterion);
+    host.append(row);
+  });
+}
+
+function updateNormativePreview(scored) {
+  const waiting = scored.criticalItems.some((item) => !item.quality);
+  const badge = $("#classificationBadge");
+  const total = $("#criticalTotalPreview");
+  const range = $("#classificationRangePreview");
+  const interpretation = $("#interpretationPreview");
+
+  renderCriticalCriteria(scored);
+
+  if (waiting) {
+    badge.textContent = "Aguardando codificação";
+    badge.dataset.classification = "aguardando";
+    total.textContent = `Parcial: ${scored.criticalPartialScore} de 15`;
+    range.textContent = "Ainda não calculável";
+    interpretation.textContent =
+      "Complete a codificação compilada dos cinco itens críticos para gerar a interpretação normativa.";
+    return;
+  }
+
+  badge.textContent = scored.classification.label;
+  badge.dataset.classification = scored.classification.key;
+  total.textContent = scored.criticalScoreComplete
+    ? `${scored.criticalTotalScore} de 15`
+    : `Parcial: ${scored.criticalPartialScore} de 15`;
+  range.textContent = scored.classification.range;
+  interpretation.textContent = scored.classification.interpretation;
+}
+
 function updateProgress() {
   const scored = scoreResponses(data, state.responses);
   const percent = scored.requiredCount
@@ -486,19 +525,20 @@ function updateProgress() {
     : `Faltam ${scored.unansweredCount} ${scored.unansweredCount === 1 ? "campo" : "campos"}`;
 
   $("#scorePreview").textContent = scored.criticalScoreComplete
-    ? `Escore de qualidade dos itens críticos: ${scored.criticalTotalScore} de 15`
+    ? `Escore dos itens críticos: ${scored.criticalTotalScore} de 15 | ${scored.classification.label}`
     : `Escore crítico parcial: ${scored.criticalPartialScore}. O total exige códigos A-D nos cinco itens críticos.`;
+
+  updateNormativePreview(scored);
 
   return scored;
 }
 
 function clearValidationMarks() {
-  document.querySelectorAll(".field--error, .question-item--missing, .conclusion-fieldset--missing")
+  document.querySelectorAll(".field--error, .question-item--missing")
     .forEach((element) => {
       element.classList.remove(
         "field--error",
-        "question-item--missing",
-        "conclusion-fieldset--missing"
+        "question-item--missing"
       );
     });
 }
@@ -531,9 +571,6 @@ function markIssues(issues) {
       ].join("");
       target = document.querySelector(selector);
       target?.closest(".field")?.classList.add("field--error");
-    } else if (issue.type === "conclusion") {
-      target = $("#conclusionFieldset");
-      target.classList.add("conclusion-fieldset--missing");
     }
 
     if (!firstTarget && target) {
@@ -571,7 +608,6 @@ function renderSuccess() {
 function renderAllInputs() {
   renderSessionDetails();
   renderQuestions();
-  renderConclusionOptions();
   $("#globalSummary").value = state.responses.summary;
   syncAllObservationControls();
   updateProgress();
@@ -708,14 +744,6 @@ $("#questionList").addEventListener("input", handleQuestionInput);
 $("#globalSummary").addEventListener("input", (event) => {
   state.responses.summary = event.target.value;
   saveDraft();
-});
-$("#conclusionOptions").addEventListener("change", (event) => {
-  const input = event.target.closest('input[name="conclusion"]');
-  if (!input) return;
-  state.responses.conclusion = input.value;
-  $("#conclusionFieldset").classList.remove("conclusion-fieldset--missing");
-  saveDraft();
-  updateProgress();
 });
 $("#questionnaire").addEventListener("submit", handleSubmit);
 $("#clearDraftButton").addEventListener("click", handleClearDraft);

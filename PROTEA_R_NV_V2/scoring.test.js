@@ -16,16 +16,15 @@ function createCompleteResponses() {
   data.questions.forEach((question) => {
     responses.items[question.id].sessions.forEach((observation) => {
       observation.quality = "A";
-      observation.frequency = scoring.requiresFrequency(question, "A") ? "1" : "";
+      observation.frequency = scoring.requiresFrequency(question, "A") ? "2" : "";
     });
     responses.items[question.id].compiled.quality = "A";
     responses.items[question.id].compiled.frequency =
-      scoring.requiresFrequency(question, "A") ? "1" : "";
+      scoring.requiresFrequency(question, "A") ? "2" : "";
     responses.items[question.id].examples = `Exemplo do item ${question.number}`;
   });
 
   responses.summary = "Síntese profissional.";
-  responses.conclusion = "sem_risco";
   return responses;
 }
 
@@ -39,15 +38,27 @@ scoring.validateData(data);
   assert.equal(scored.criticalTotalScore, 0);
   assert.equal(scored.criticalPartialScore, 0);
   assert.equal(scored.criticalItems.length, 5);
+  assert.equal(scored.classification.key, "sem_risco");
+  assert.ok(
+    scored.criticalItems.every(
+      (item) => item.criterion.key === "criterio_sem_risco"
+    )
+  );
 
   const results = scoring.buildResultsPayload(data, scored);
-  assert.equal(results.length, 22);
+  assert.equal(results.length, 25);
   assert.deepEqual(Object.keys(results[0]), ["pergunta", "resposta"]);
   assert.match(results[3].resposta, /Codificação compilada: A -/);
+  assert.match(results.at(-4).resposta, /Sem risco para TEA/);
+  assert.match(results.at(-1).resposta, /percentil não calculado/i);
 
   const meta = scoring.buildResultsMetaPayload(scored);
   assert.equal(meta.pontuacao_qualidade_total, 0);
+  assert.equal(meta.pontuacao_maxima, 15);
   assert.equal(meta.calculo_completo, true);
+  assert.equal(meta.classificacao, "Sem risco para TEA");
+  assert.equal(meta.percentil, null);
+  assert.equal(meta.percentil_disponivel_no_manual, false);
   assert.equal(meta.conclusao, "Sem risco para TEA");
   assert.deepEqual(meta.escores_qualidade_itens_criticos, {
     IAC: 0,
@@ -56,6 +67,10 @@ scoring.validateData(data);
     BS: 0,
     MRC: 0
   });
+  assert.equal(
+    meta.subtotais_itens_criticos_por_area.comportamentos_sociocomunicativos.pontuacao,
+    0
+  );
 }
 
 {
@@ -75,10 +90,51 @@ scoring.validateData(data);
   const scored = scoring.scoreResponses(data, responses);
   assert.equal(scored.complete, true);
   assert.equal(scored.criticalTotalScore, 10);
+  assert.equal(scored.classification.key, "com_risco");
+  assert.equal(
+    scored.criticalAreaScores.comportamentos_sociocomunicativos.pontuacao,
+    6
+  );
+  assert.equal(scored.criticalAreaScores.qualidade_da_brincadeira.pontuacao, 1);
+  assert.equal(
+    scored.criticalAreaScores.movimentos_repetitivos_e_estereotipados.pontuacao,
+    3
+  );
   assert.deepEqual(
     scored.criticalItems.map((item) => item.frequency),
     [2, 3, null, 1, 3]
   );
+}
+
+{
+  const responses = createCompleteResponses();
+  responses.items.item_1.compiled = { quality: "B", frequency: "2" };
+  const scored = scoring.scoreResponses(data, responses);
+
+  assert.equal(scored.criticalTotalScore, 1);
+  assert.equal(scored.classification.key, "risco_relativo");
+}
+
+{
+  const responses = createCompleteResponses();
+  responses.items.item_1.compiled = { quality: "C", frequency: "1" };
+  responses.items.item_2.compiled = { quality: "C", frequency: "3" };
+  responses.items.item_3.compiled = { quality: "A", frequency: "2" };
+  responses.items.item_13.compiled = { quality: "D", frequency: "" };
+  responses.items.item_16.compiled = { quality: "A", frequency: "" };
+  const criteria = Object.fromEntries(
+    scoring.scoreResponses(data, responses).criticalItems.map(
+      (item) => [item.code, item.criterion.key]
+    )
+  );
+
+  assert.deepEqual(criteria, {
+    IAC: "criterio_de_risco",
+    RAC: "criterio_intermediario",
+    IM: "criterio_sem_risco",
+    BS: "criterio_de_risco",
+    MRC: "criterio_sem_risco"
+  });
 }
 
 {
@@ -106,6 +162,11 @@ scoring.validateData(data);
   assert.equal(scored.complete, true);
   assert.equal(scored.criticalScoreComplete, false);
   assert.equal(scored.criticalTotalScore, null);
+  assert.equal(scored.classification.key, "nao_calculavel");
+
+  const meta = scoring.buildResultsMetaPayload(scored);
+  assert.equal(meta.classificacao, "Classificação não calculável");
+  assert.equal(meta.calculo_completo, false);
 }
 
 {

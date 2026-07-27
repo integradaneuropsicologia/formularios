@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#176b67">
   <title>PROTEA-R-NV | Avaliação comportamental</title>
-  <link rel="stylesheet" href="styles.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
   <div id="app">
@@ -107,14 +107,41 @@
               ></textarea>
             </label>
 
-            <fieldset id="conclusionFieldset" class="conclusion-fieldset">
-              <legend>Conclusão</legend>
-              <p>
-                Selecione a conclusão definida pelo profissional conforme a Tabela 5.6 do manual.
-                Este formulário não aplica automaticamente pontos de corte não presentes no material fornecido.
+            <section class="normative-result" aria-labelledby="normativeResultTitle">
+              <div class="normative-result__heading">
+                <div>
+                  <p class="eyebrow">Tabela 5.6 do manual</p>
+                  <h3 id="normativeResultTitle">Resultado dos itens críticos</h3>
+                </div>
+                <span id="classificationBadge" class="classification-badge">
+                  Aguardando codificação
+                </span>
+              </div>
+
+              <div class="result-metrics">
+                <div>
+                  <span>Pontuação crítica</span>
+                  <strong id="criticalTotalPreview">Parcial: 0 de 15</strong>
+                </div>
+                <div>
+                  <span>Faixa de classificação</span>
+                  <strong id="classificationRangePreview">Ainda não calculável</strong>
+                </div>
+                <div>
+                  <span>Percentil</span>
+                  <strong>Não disponibilizado no manual</strong>
+                </div>
+              </div>
+
+              <div id="criticalCriteriaPreview" class="critical-criteria-preview"></div>
+              <p id="interpretationPreview" class="interpretation-preview">
+                Complete a codificação compilada dos cinco itens críticos para gerar a interpretação normativa.
               </p>
-              <div id="conclusionOptions" class="conclusion-options"></div>
-            </fieldset>
+              <p class="normative-note">
+                O resultado identifica sinais de alerta e deve ser integrado às demais informações da avaliação;
+                não constitui diagnóstico isolado.
+              </p>
+            </section>
           </section>
 
           <div class="submit-region">
@@ -150,9 +177,9 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="data.js?v=1"></script>
-  <script src="access.js?v=1"></script>
-  <script src="scoring.js?v=1"></script>
-  <script src="script.js?v=1"></script>
+  <script src="data.js?v=2"></script>
+  <script src="access.js?v=2"></script>
+  <script src="scoring.js?v=2"></script>
+  <script src="script.js?v=2"></script>
 </body>
 </html>
