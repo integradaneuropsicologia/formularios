@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#245d6a">
-  <title>DASS-21 | Escala de Depressão, Ansiedade e Estresse</title>
-  <link rel="stylesheet" href="styles.css?v=dass21-2">
+  <title>EDE-A | Escala de Desregulação Emocional</title>
+  <link rel="stylesheet" href="styles.css?v=edea-1">
 </head>
 <body>
   <div id="app">
@@ -30,10 +30,10 @@
       <header class="topbar">
         <div class="topbar__content">
           <div class="brand">
-            <span class="brand__mark" aria-hidden="true">D</span>
+            <span class="brand__mark" aria-hidden="true">E</span>
             <div>
-              <strong>DASS-21</strong>
-              <span>Depressão, Ansiedade e Estresse</span>
+              <strong>EDE-A</strong>
+              <span>Escala de Desregulação Emocional</span>
             </div>
           </div>
           <div class="patient-context">
@@ -45,22 +45,22 @@
 
       <main class="form-main">
         <section class="form-intro" aria-labelledby="formTitle">
-          <p class="eyebrow">Escala de autorrelato</p>
-          <h1 id="formTitle">Como você se sentiu na última semana?</h1>
-          <p>Indique o quanto cada frase se aplicou a você durante a última semana. Não existem respostas certas ou erradas.</p>
+          <p class="eyebrow">Versão adultos</p>
+          <h1 id="formTitle">Quando estou triste eu...</h1>
+          <p>Leia atentamente cada frase e indique como você se sente ou se comporta quando ocorrem situações que o deixam triste. Não existem respostas certas ou erradas.</p>
         </section>
 
         <div class="progress-region" aria-live="polite">
           <div class="progress-copy">
             <span>Progresso</span>
-            <strong id="progressText">0 de 21 respondidos</strong>
+            <strong id="progressText">0 de 15 respondidos</strong>
           </div>
           <div
             id="progressTrack"
             class="progress-track"
             role="progressbar"
             aria-valuemin="0"
-            aria-valuemax="21"
+            aria-valuemax="15"
             aria-valuenow="0"
           >
             <div id="progressBar" class="progress-fill"></div>
@@ -72,7 +72,7 @@
 
           <div class="submit-region">
             <div>
-              <strong id="completionText">Responda aos 21 itens</strong>
+              <strong id="completionText">Responda aos 15 itens</strong>
               <p id="formStatus" class="form-status" aria-live="assertive"></p>
             </div>
             <button id="submitButton" class="button button--primary" type="submit">
@@ -98,9 +98,9 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="data.js?v=dass21-1"></script>
-  <script src="access.js?v=dass21-1"></script>
-  <script src="scoring.js?v=dass21-1"></script>
-  <script src="script.js?v=dass21-1"></script>
+  <script src="data.js?v=edea-1"></script>
+  <script src="access.js?v=edea-1"></script>
+  <script src="scoring.js?v=edea-1"></script>
+  <script src="script.js?v=edea-1"></script>
 </body>
 </html>
