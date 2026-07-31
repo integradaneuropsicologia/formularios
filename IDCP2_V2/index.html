@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#235f59">
+  <title>IDCP-2 | Inventário Dimensional Clínico da Personalidade</title>
+  <link rel="stylesheet" href="styles.css?v=idcp2-1">
+</head>
+<body>
+  <div id="app">
+    <section id="loadingScreen" class="center-screen">
+      <div class="loading-mark" aria-hidden="true"></div>
+      <p>Validando acesso ao formulário...</p>
+    </section>
+
+    <section id="errorScreen" class="center-screen hidden" aria-live="assertive">
+      <div class="message-panel message-panel--error">
+        <p class="eyebrow">Não foi possível abrir o formulário</p>
+        <h1>Acesso indisponível</h1>
+        <p id="errorText">Confira o link recebido e tente novamente.</p>
+        <a id="errorBackLink" class="button button--secondary" href="https://integradaneuropsicologia.github.io/area-do-paciente-v2/">
+          Voltar à área do paciente
+        </a>
+      </div>
+    </section>
+
+    <section id="formScreen" class="form-screen hidden">
+      <header class="topbar">
+        <div class="topbar__content">
+          <div class="brand">
+            <span class="brand__mark" aria-hidden="true">I</span>
+            <div>
+              <strong>IDCP-2</strong>
+              <span>Inventário Dimensional Clínico da Personalidade</span>
+            </div>
+          </div>
+          <div class="patient-context">
+            <span>Paciente</span>
+            <strong id="patientName">Identificação validada</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="form-main">
+        <section class="form-intro" aria-labelledby="formTitle">
+          <p class="eyebrow">Inventário de autorrelato</p>
+          <h1 id="formTitle">Inventário Dimensional Clínico da Personalidade</h1>
+          <div class="instructions">
+            <h2>Instruções</h2>
+            <p>A seguir, existe uma série de frases sobre como as pessoas se comportam e pensam. Responda sobre o quanto essas frases se aplicam a você da maneira mais sincera possível.</p>
+            <p>Não existem respostas certas ou erradas. Não se preocupe se algumas frases lhe parecem pouco comuns, pois elas representam ações que podem servir a outras pessoas.</p>
+            <p>Leia atentamente cada frase e escolha a alternativa correspondente:</p>
+            <ul>
+              <li><strong>Nada:</strong> não tem nada a ver comigo.</li>
+              <li><strong>Pouco:</strong> tem um pouco a ver comigo.</li>
+              <li><strong>Moderadamente:</strong> tem a ver comigo.</li>
+              <li><strong>Muito:</strong> tem muito a ver comigo.</li>
+            </ul>
+            <p>É importante que suas respostas sejam sinceras. Responda a todos os itens antes de finalizar.</p>
+          </div>
+        </section>
+
+        <div class="progress-region" aria-live="polite">
+          <div class="progress-copy">
+            <span>Progresso geral</span>
+            <strong id="progressText">0 de 210 respondidos</strong>
+          </div>
+          <div
+            id="progressTrack"
+            class="progress-track"
+            role="progressbar"
+            aria-valuemin="0"
+            aria-valuemax="210"
+            aria-valuenow="0"
+          >
+            <div id="progressBar" class="progress-fill"></div>
+          </div>
+        </div>
+
+        <div class="block-region" aria-live="polite">
+          <div>
+            <span>Etapa atual</span>
+            <strong id="blockText">Bloco 1 de 11</strong>
+          </div>
+          <span id="blockRange" class="block-range">Itens 1 a 20</span>
+        </div>
+
+        <form id="questionnaire" novalidate>
+          <div id="questionList" class="question-list"></div>
+
+          <div class="page-navigation">
+            <button id="previousButton" class="button button--secondary" type="button">
+              Anterior
+            </button>
+            <p id="pageStatus" class="page-status" aria-live="assertive"></p>
+            <button id="nextButton" class="button button--primary" type="button">
+              Próximo bloco
+            </button>
+          </div>
+
+          <div id="submitRegion" class="submit-region hidden">
+            <div>
+              <strong id="completionText">Responda aos 210 itens</strong>
+              <p id="formStatus" class="form-status" aria-live="assertive"></p>
+            </div>
+            <button id="submitButton" class="button button--primary" type="submit">
+              Enviar respostas
+            </button>
+          </div>
+        </form>
+      </main>
+    </section>
+
+    <section id="successScreen" class="center-screen hidden">
+      <div class="message-panel message-panel--success">
+        <div class="success-symbol" aria-hidden="true">✓</div>
+        <p class="eyebrow">Formulário concluído</p>
+        <h1>Respostas registradas</h1>
+        <p id="successText">O preenchimento foi salvo com sucesso.</p>
+        <p id="successStatus" class="send-status" aria-live="polite"></p>
+        <button id="successBackButton" class="button button--secondary" type="button">
+          Voltar à área do paciente
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="data.js?v=idcp2-1"></script>
+  <script src="access.js?v=idcp2-1"></script>
+  <script src="scoring.js?v=idcp2-1"></script>
+  <script src="script.js?v=idcp2-1"></script>
+</body>
+</html>
