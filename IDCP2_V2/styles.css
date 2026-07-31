@@ -321,6 +321,7 @@ label {
 }
 
 .question-item {
+  container-type: inline-size;
   min-width: 0;
   margin: 0;
   padding: 21px;
@@ -429,11 +430,13 @@ label {
 }
 
 .response-option__label {
+  flex: 1 1 auto;
   min-width: 0;
   color: #34494c;
   font-size: 0.94rem;
   font-weight: 700;
   line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .response-option:has(input:checked) {
@@ -646,9 +649,55 @@ label {
 
 }
 
-@media (max-width: 350px) {
+@container (max-width: 370px) {
   .response-options {
     grid-template-columns: 1fr;
+  }
+}
+
+@container (max-width: 230px) {
+  .response-option {
+    gap: 8px;
+    padding-inline: 8px;
+  }
+
+  .response-option__control {
+    flex-basis: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .response-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 320px) {
+  .topbar__content {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 0;
+  }
+
+  .patient-context {
+    width: 100%;
+    max-width: none;
+    text-align: left;
+  }
+
+  .patient-context strong {
+    max-width: 100%;
+  }
+
+  .page-navigation {
+    grid-template-columns: 1fr;
+  }
+
+  .page-status {
+    grid-column: 1;
+    grid-row: auto;
   }
 }
 
