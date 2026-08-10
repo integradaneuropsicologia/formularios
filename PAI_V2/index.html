@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#235f59">
   <title>PAI | Inventário de Avaliação da Personalidade</title>
-  <link rel="stylesheet" href="styles.css?v=pai-1">
+  <link rel="stylesheet" href="styles.css?v=pai-2">
 </head>
 <body>
   <div id="app">
@@ -72,7 +72,10 @@
             <span>Etapa atual</span>
             <strong id="blockText">Bloco 1 de 18</strong>
           </div>
-          <span id="blockRange" class="block-range">Itens 1 a 20</span>
+          <div class="block-meta">
+            <span id="blockRange" class="block-range">Itens 1 a 20</span>
+            <span id="draftStatus" class="draft-status" role="status">Salvamento automático ativo</span>
+          </div>
         </div>
 
         <form id="questionnaire" novalidate>
@@ -116,9 +119,10 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="data.js?v=pai-1"></script>
-  <script src="access.js?v=pai-1"></script>
-  <script src="scoring.js?v=pai-1"></script>
-  <script src="script.js?v=pai-1"></script>
+  <script src="data.js?v=pai-2"></script>
+  <script src="access.js?v=pai-2"></script>
+  <script src="scoring.js?v=pai-2"></script>
+  <script src="draft.js?v=pai-2"></script>
+  <script src="script.js?v=pai-2"></script>
 </body>
 </html>

@@ -283,6 +283,38 @@ label {
   font-weight: 700;
 }
 
+.block-meta {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  text-align: right;
+}
+
+.draft-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--primary);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.draft-status::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  content: "";
+}
+
+.draft-status--error {
+  color: var(--danger);
+}
+
+.draft-status--error::before {
+  background: var(--danger);
+}
+
 .question-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -589,6 +621,11 @@ label {
     align-items: flex-start;
     flex-direction: column;
     gap: 3px;
+  }
+
+  .block-meta {
+    justify-items: start;
+    text-align: left;
   }
 
   .page-navigation {

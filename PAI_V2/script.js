@@ -3,7 +3,7 @@
 const SUPABASE_URL = "https://ydypdeafbcdcamwigjuq.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_lg9teAniku65cd2dnZJvIQ_Zii0XneZ";
 
-if (!window.PAIData || !window.PAIAccess || !window.PAIScoring) {
+if (!window.PAIData || !window.PAIAccess || !window.PAIScoring || !window.PAIDraft) {
   throw new Error("Não foi possível carregar os módulos do PAI.");
 }
 
@@ -20,6 +20,13 @@ const {
   scoreResponses,
   validateData
 } = window.PAIScoring;
+const {
+  getDraftKey,
+  getLegacyDraftKey,
+  readDraft,
+  removeDraft,
+  writeDraft
+} = window.PAIDraft;
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const pageCount = Math.ceil(data.questions.length / data.itemsPerPage);
@@ -68,59 +75,72 @@ function getPatientName(patient) {
   ).trim();
 }
 
-function hashDraftIdentity(value) {
-  let hash = 2166136261;
-  for (const character of String(value || "demo")) {
-    hash ^= character.charCodeAt(0);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0).toString(36);
+function getDraftIdentity() {
+  return getToken(window.location.search) || "demo";
 }
 
-function getDraftKey() {
-  const identity = getToken(window.location.search) || "demo";
-  return `pai_v2_session_${hashDraftIdentity(identity)}`;
+function setDraftStatus(message, isError = false) {
+  const status = $("#draftStatus");
+  if (!status) return;
+
+  status.textContent = message;
+  status.classList.toggle("draft-status--error", isError);
+}
+
+function formatSavedTime(savedAt) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(savedAt));
 }
 
 function loadDraft() {
-  try {
-    const saved = JSON.parse(sessionStorage.getItem(getDraftKey()) || "null");
-    const validValues = new Set(data.responses.map((option) => option.value));
+  const identity = getDraftIdentity();
+  const options = {
+    validQuestionIds: data.questions.map((question) => question.id),
+    validValues: data.responses.map((option) => option.value),
+    pageCount
+  };
+  const persistentKey = getDraftKey(identity);
+  const legacyKey = getLegacyDraftKey(identity);
+  let saved = readDraft(localStorage, persistentKey, options);
 
-    if (saved?.responses && typeof saved.responses === "object") {
-      state.responses = Object.fromEntries(
-        Object.entries(saved.responses).filter(([questionId, value]) => (
-          /^item_\d+$/.test(questionId) && validValues.has(value)
-        ))
-      );
-    }
+  if (!saved) {
+    saved = readDraft(sessionStorage, legacyKey, options);
 
-    if (Number.isInteger(saved?.currentPage)) {
-      state.currentPage = Math.min(Math.max(saved.currentPage, 0), pageCount - 1);
+    if (saved) {
+      writeDraft(localStorage, persistentKey, saved, saved.savedAt);
+      removeDraft(sessionStorage, legacyKey);
     }
-  } catch {
-    state.responses = {};
-    state.currentPage = 0;
   }
+
+  if (!saved) {
+    setDraftStatus("Salvamento automático ativo");
+    return;
+  }
+
+  state.responses = saved.responses;
+  state.currentPage = saved.currentPage;
+  setDraftStatus(`Rascunho recuperado, salvo às ${formatSavedTime(saved.savedAt)}`);
 }
 
 function saveDraft() {
-  try {
-    sessionStorage.setItem(getDraftKey(), JSON.stringify({
-      responses: state.responses,
-      currentPage: state.currentPage
-    }));
-  } catch {
-    // O preenchimento continua normalmente se o navegador bloquear o armazenamento da sessão.
+  const savedAt = writeDraft(localStorage, getDraftKey(getDraftIdentity()), {
+    responses: state.responses,
+    currentPage: state.currentPage
+  });
+
+  if (savedAt) {
+    setDraftStatus(`Rascunho salvo às ${formatSavedTime(savedAt)}`);
+  } else {
+    setDraftStatus("Não foi possível salvar o rascunho neste dispositivo", true);
   }
 }
 
 function clearDraft() {
-  try {
-    sessionStorage.removeItem(getDraftKey());
-  } catch {
-    // Nenhuma ação adicional é necessária.
-  }
+  const identity = getDraftIdentity();
+  removeDraft(localStorage, getDraftKey(identity));
+  removeDraft(sessionStorage, getLegacyDraftKey(identity));
 }
 
 function redirectToPatientArea() {
