@@ -350,14 +350,23 @@ label {
 
 .question-item legend {
   display: flex;
+  float: left;
   width: 100%;
+  max-width: 100%;
   align-items: flex-start;
   gap: 12px;
+  margin: 0 0 16px;
   padding: 0;
+  box-sizing: border-box;
   color: var(--ink);
   font-size: 1rem;
   font-weight: 750;
   line-height: 1.42;
+}
+
+.question-item .response-options {
+  clear: both;
+  margin-top: 0;
 }
 
 .question-number {
