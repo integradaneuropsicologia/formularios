@@ -145,17 +145,21 @@ function renderQuestions() {
       list.append(createSectionHeading(sections.get(activeSection)));
     }
 
-    const fieldset = document.createElement("fieldset");
+    const fieldset = document.createElement("div");
     fieldset.className = "question-item";
     fieldset.dataset.questionId = question.id;
+    fieldset.setAttribute("role", "group");
+    fieldset.setAttribute("aria-labelledby", `${question.id}-label`);
 
-    const legend = document.createElement("legend");
+    const legend = document.createElement("div");
+    legend.className = "question-heading";
     const itemNumber = document.createElement("span");
     itemNumber.className = "question-number";
     itemNumber.textContent = question.displayNumber;
 
     const itemText = document.createElement("span");
     itemText.className = "question-text";
+    itemText.id = `${question.id}-label`;
     itemText.textContent = question.text;
     legend.append(itemNumber, itemText);
 

@@ -308,7 +308,7 @@ input {
   background: var(--danger-soft);
 }
 
-.question-item legend {
+.question-heading {
   display: flex;
   width: 100%;
   min-width: 0;
@@ -534,7 +534,7 @@ input {
     padding: 18px 14px;
   }
 
-  .question-item legend {
+  .question-heading {
     font-size: 0.96rem;
   }
 
