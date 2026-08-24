@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#155f5b">
   <title>PSST | Triagem de sintomas pré-menstruais</title>
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
   <div id="app">
@@ -50,17 +50,14 @@
           <p>
             Considere os sintomas que aparecem na semana anterior à menstruação e melhoram ou desaparecem poucos dias após o início do sangramento.
           </p>
-          <div class="screening-note">
-            Este instrumento é uma triagem e não confirma diagnóstico. Responda conforme a intensidade percebida na maioria dos ciclos recentes.
-          </div>
         </section>
 
         <div class="progress-region" aria-live="polite">
           <div class="progress-copy">
             <span>Progresso</span>
-            <strong id="progressText">0 de 20 respondidos</strong>
+            <strong id="progressText">0 de 23 respondidos</strong>
           </div>
-          <div id="progressTrack" class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0">
+          <div id="progressTrack" class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="23" aria-valuenow="0">
             <div id="progressBar" class="progress-fill"></div>
           </div>
         </div>
@@ -70,7 +67,7 @@
 
           <div class="submit-region">
             <div>
-              <strong id="completionText">Responda aos 20 itens</strong>
+              <strong id="completionText">Responda aos 23 itens</strong>
               <p id="formStatus" class="form-status" aria-live="assertive"></p>
             </div>
             <button id="submitButton" class="button button--primary" type="submit">
@@ -96,9 +93,9 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="data.js?v=2"></script>
-  <script src="access.js?v=2"></script>
-  <script src="scoring.js?v=2"></script>
-  <script src="script.js?v=2"></script>
+  <script src="data.js?v=3"></script>
+  <script src="access.js?v=3"></script>
+  <script src="scoring.js?v=3"></script>
+  <script src="script.js?v=3"></script>
 </body>
 </html>

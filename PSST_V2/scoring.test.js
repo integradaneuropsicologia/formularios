@@ -5,16 +5,16 @@ const assert = require("node:assert/strict");
 const data = require("./data.js");
 const scoring = require("./scoring.js");
 
-function createBaseResponses(temporal = "sim") {
+function createBaseResponses() {
   return Object.fromEntries(
     data.questions.map((question) => [
       question.id,
-      question.group === "temporal" ? temporal : "nada"
+      question.group === "open" ? "Resposta aberta para análise clínica." : "nada"
     ])
   );
 }
 
-test("mantém 14 sintomas, 4 sintomas centrais e 5 áreas de prejuízo", () => {
+test("mantém 14 sintomas, 4 sintomas centrais, 5 prejuízos e 4 perguntas abertas", () => {
   assert.doesNotThrow(() => scoring.validateData(data));
   assert.equal(data.questions.filter((question) => question.group === "symptom").length, 14);
   assert.deepEqual(
@@ -22,6 +22,7 @@ test("mantém 14 sintomas, 4 sintomas centrais e 5 áreas de prejuízo", () => {
     ["sintoma_1", "sintoma_2", "sintoma_3", "sintoma_4"]
   );
   assert.equal(data.questions.filter((question) => question.group === "impairment").length, 5);
+  assert.equal(data.questions.filter((question) => question.group === "open").length, 4);
 });
 
 test("não exibe valores numéricos nas alternativas", () => {
@@ -73,16 +74,13 @@ test("exige pelo menos cinco sintomas moderados ou graves", () => {
   assert.equal(result.classification, scoring.CLASSIFICATIONS.NONE_OR_MILD_PMS);
 });
 
-test("não aplica triagem positiva quando o padrão temporal não é confirmado", () => {
-  const responses = createBaseResponses("nao");
-  [1, 2, 3, 4, 5].forEach((item) => {
-    responses[`sintoma_${item}`] = "grave";
-  });
-  responses.prejuizo_a = "grave";
-
+test("exige o preenchimento das quatro perguntas abertas", () => {
+  const responses = createBaseResponses();
+  responses.investigacao_4 = "   ";
   const result = scoring.scoreResponses(data, responses);
-  assert.equal(result.classification, scoring.CLASSIFICATIONS.TEMPORAL_NOT_CONFIRMED);
-  assert.equal(result.meetsProbablePmdd, false);
+  assert.equal(result.complete, false);
+  assert.equal(result.unansweredCount, 1);
+  assert.throws(() => scoring.buildResultsPayload(result), /Todos os itens/);
 });
 
 test("gera perguntas e respostas em results e indicadores em results_meta", () => {
@@ -90,8 +88,9 @@ test("gera perguntas e respostas em results e indicadores em results_meta", () =
   const results = scoring.buildResultsPayload(result);
   const meta = scoring.buildResultsMetaPayload(result);
 
-  assert.equal(results.length, 20);
+  assert.equal(results.length, 23);
   assert.deepEqual(Object.keys(results[0]), ["pergunta", "resposta"]);
+  assert.equal(results.at(-1).resposta, "Resposta aberta para análise clínica.");
   assert.equal(meta.classificacao_psst, scoring.CLASSIFICATIONS.NONE_OR_MILD_PMS);
   assert.equal(meta.sintomas_moderados_ou_graves, 0);
   assert.equal(Object.hasOwn(meta, "pontuacao_total"), false);

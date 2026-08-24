@@ -133,6 +133,31 @@ function createResponseOption(question, option) {
   return label;
 }
 
+function createOpenResponse(question) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "open-response";
+
+  const textarea = document.createElement("textarea");
+  textarea.name = question.id;
+  textarea.rows = 4;
+  textarea.maxLength = 1500;
+  textarea.placeholder = question.placeholder || "Digite sua resposta.";
+  textarea.value = state.responses[question.id] || "";
+  textarea.setAttribute("aria-label", `Resposta da pergunta ${question.displayNumber}`);
+
+  textarea.addEventListener("input", () => {
+    state.responses[question.id] = textarea.value;
+    if (textarea.value.trim()) {
+      wrapper.closest(".question-item").classList.remove("question-item--missing");
+    }
+    updateProgress();
+    $("#formStatus").textContent = "";
+  });
+
+  wrapper.append(textarea);
+  return wrapper;
+}
+
 function renderQuestions() {
   const list = $("#questionList");
   const sections = new Map(data.sections.map((section) => [section.id, section]));
@@ -163,15 +188,19 @@ function renderQuestions() {
     itemText.textContent = question.text;
     legend.append(itemNumber, itemText);
 
-    const options = document.createElement("div");
-    options.className = "response-options";
-    options.setAttribute("aria-label", `Alternativas do item ${question.displayNumber}`);
+    const responseControl = question.type === "textarea"
+      ? createOpenResponse(question)
+      : (() => {
+          const options = document.createElement("div");
+          options.className = "response-options";
+          options.setAttribute("aria-label", `Alternativas do item ${question.displayNumber}`);
+          getQuestionOptions(data, question).forEach((option) => {
+            options.append(createResponseOption(question, option));
+          });
+          return options;
+        })();
 
-    getQuestionOptions(data, question).forEach((option) => {
-      options.append(createResponseOption(question, option));
-    });
-
-    fieldset.append(legend, options);
+    fieldset.append(legend, responseControl);
     list.append(fieldset);
   });
 }
@@ -196,14 +225,14 @@ function markMissingQuestions() {
 
   data.questions.forEach((question) => {
     const fieldset = document.querySelector(`[data-question-id="${question.id}"]`);
-    const missing = !state.responses[question.id];
+    const missing = !String(state.responses[question.id] || "").trim();
     fieldset.classList.toggle("question-item--missing", missing);
     if (missing && !firstMissing) firstMissing = fieldset;
   });
 
   if (firstMissing) {
     firstMissing.scrollIntoView({ behavior: "smooth", block: "center" });
-    firstMissing.querySelector("input")?.focus({ preventScroll: true });
+    firstMissing.querySelector("input, textarea")?.focus({ preventScroll: true });
   }
 }
 

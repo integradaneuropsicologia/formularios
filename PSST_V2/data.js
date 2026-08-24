@@ -8,12 +8,6 @@
     shortTitle: "PSST",
     sections: [
       {
-        id: "temporalidade",
-        eyebrow: "Antes de começar",
-        title: "Padrão temporal",
-        description: "Confirme quando os sintomas costumam ocorrer."
-      },
-      {
         id: "sintomas",
         eyebrow: "Parte 1",
         title: "Sintomas pré-menstruais",
@@ -24,13 +18,15 @@
         eyebrow: "Parte 2",
         title: "Interferência no funcionamento",
         description: "Considere o impacto dos sintomas durante o período pré-menstrual."
+      },
+      {
+        id: "investigacao",
+        eyebrow: "Parte 3",
+        title: "Padrão cíclico e temporalidade",
+        description: "Descreva como os sintomas se distribuem ao longo do ciclo menstrual."
       }
     ],
     responseSets: {
-      temporal: [
-        { value: "sim", label: "Sim" },
-        { value: "nao", label: "Não" }
-      ],
       severity: [
         { value: "nada", label: "Nada", score: 0 },
         { value: "leve", label: "Leve", score: 1 },
@@ -39,14 +35,6 @@
       ]
     },
     questions: [
-      {
-        id: "padrao_temporal",
-        section: "temporalidade",
-        displayNumber: "T",
-        responseSet: "temporal",
-        group: "temporal",
-        text: "Você apresenta algum dos sintomas abaixo na semana anterior à menstruação, com melhora ou desaparecimento poucos dias após o início do sangramento?"
-      },
       {
         id: "sintoma_1",
         section: "sintomas",
@@ -202,6 +190,42 @@
         responseSet: "severity",
         group: "impairment",
         text: "Em que intensidade esses sintomas interferem nas responsabilidades domésticas?"
+      },
+      {
+        id: "investigacao_1",
+        section: "investigacao",
+        displayNumber: "P1",
+        type: "textarea",
+        group: "open",
+        text: "Esses sintomas aparecem na maioria dos ciclos menstruais?",
+        placeholder: "Descreva com que frequência isso acontece."
+      },
+      {
+        id: "investigacao_2",
+        section: "investigacao",
+        displayNumber: "P2",
+        type: "textarea",
+        group: "open",
+        text: "Depois dos primeiros dias da menstruação, eles ficam mínimos ou desaparecem?",
+        placeholder: "Descreva o que costuma acontecer após o início da menstruação."
+      },
+      {
+        id: "investigacao_3",
+        section: "investigacao",
+        displayNumber: "P3",
+        type: "textarea",
+        group: "open",
+        text: "Existe um período do mês em que você se sente sem esses sintomas?",
+        placeholder: "Descreva esse período, se existir."
+      },
+      {
+        id: "investigacao_4",
+        section: "investigacao",
+        displayNumber: "P4",
+        type: "textarea",
+        group: "open",
+        text: "Esses sintomas existem durante todo o mês e apenas pioram antes da menstruação, ou aparecem especificamente no período pré-menstrual?",
+        placeholder: "Descreva como os sintomas se apresentam ao longo do mês."
       }
     ]
   };
