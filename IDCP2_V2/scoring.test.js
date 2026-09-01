@@ -5,6 +5,7 @@ const path = require("node:path");
 
 const data = require("./data.js");
 const {
+  DIMENSIONS,
   buildResultsMetaPayload,
   buildResultsPayload,
   scoreResponses,
@@ -50,6 +51,16 @@ test("mantém o código separado do texto das perguntas", () => {
   assert.equal(data.questions.at(-1).text, "Minto sem remorso.");
 });
 
+test("mapeia as 12 dimensões somente para códigos existentes", () => {
+  const formCodes = new Set(data.questions.map((question) => question.code));
+
+  assert.equal(Object.keys(DIMENSIONS).length, 12);
+  Object.values(DIMENSIONS).forEach((codes) => {
+    assert.equal(new Set(codes).size, codes.length);
+    codes.forEach((code) => assert.equal(formCodes.has(code), true, code));
+  });
+});
+
 test("exibe o código do protocolo no marcador visual", () => {
   const scriptSource = fs.readFileSync(path.join(__dirname, "script.js"), "utf8");
 
@@ -62,7 +73,7 @@ test("divide o preenchimento em 11 blocos de até 20 itens", () => {
   assert.equal(Math.ceil(data.questions.length / data.itemsPerPage), 11);
 });
 
-test("envia perguntas e respostas textuais em results e results_meta vazio", () => {
+test("envia perguntas e respostas textuais e as 12 dimensões em results_meta", () => {
   const scored = scoreResponses(data, completeResponses());
   const results = buildResultsPayload(scored);
   const resultsMeta = buildResultsMetaPayload(scored);
@@ -73,7 +84,36 @@ test("envia perguntas e respostas textuais em results e results_meta vazio", () 
     assert.deepEqual(Object.keys(row).sort(), ["pergunta", "resposta"]);
     assert.equal(row.resposta, "Moderadamente");
   });
-  assert.deepEqual(resultsMeta, {});
+  assert.deepEqual(resultsMeta, {
+    dependencia: 54,
+    agressividade: 48,
+    instabilidade_de_humor: 48,
+    excentricidade: 54,
+    necessidade_de_atencao: 39,
+    desconfianca: 54,
+    grandiosidade: 54,
+    isolamento: 54,
+    evitacao_a_criticas: 54,
+    autossacrificio: 54,
+    conscienciosidade: 69,
+    inconsequencia: 54
+  });
+});
+
+test("soma cada dimensão pelos códigos, independentemente da posição do item", () => {
+  const responses = completeResponses("nada");
+  const itemByCode = Object.fromEntries(
+    data.questions.map((question) => [question.code, question.id])
+  );
+
+  DIMENSIONS.dependencia.forEach((code) => {
+    responses[itemByCode[code]] = "muito";
+  });
+
+  const resultsMeta = buildResultsMetaPayload(scoreResponses(data, responses));
+
+  assert.equal(resultsMeta.dependencia, DIMENSIONS.dependencia.length * 4);
+  assert.equal(resultsMeta.agressividade, DIMENSIONS.agressividade.length);
 });
 
 test("impede o payload enquanto houver item sem resposta", () => {

@@ -46,7 +46,7 @@ test("consulta a liberação pública do IDCP-2", async () => {
   }]);
 });
 
-test("envia results e results_meta vazio pelo RPC público", async () => {
+test("envia results e as dimensões em results_meta pelo RPC público", async () => {
   const calls = [];
   const client = {
     async rpc(name, payload) {
@@ -55,11 +55,25 @@ test("envia results e results_meta vazio pelo RPC público", async () => {
     }
   };
   const results = [{ pergunta: "Tenho conflitos internos.", resposta: "Um pouco verdadeiro" }];
+  const resultsMeta = {
+    dependencia: 38,
+    agressividade: 31,
+    instabilidade_de_humor: 29,
+    excentricidade: 34,
+    necessidade_de_atencao: 25,
+    desconfianca: 30,
+    grandiosidade: 28,
+    isolamento: 35,
+    evitacao_a_criticas: 33,
+    autossacrificio: 32,
+    conscienciosidade: 47,
+    inconsequencia: 27
+  };
 
   await access.submitPatientResponse(client, {
     search: "?token=token-valido&form=IDCP2_V2",
     results,
-    resultsMeta: {}
+    resultsMeta
   });
 
   assert.equal(calls[0].name, "submit_public_patient_form_response");
@@ -69,7 +83,7 @@ test("envia results e results_meta vazio pelo RPC público", async () => {
     "IDCP-2 - Inventário Dimensional Clínico da Personalidade"
   );
   assert.deepEqual(calls[0].payload.p_results, results);
-  assert.deepEqual(calls[0].payload.p_results_meta, {});
+  assert.deepEqual(calls[0].payload.p_results_meta, resultsMeta);
 });
 
 test("retorna à área do paciente preservando o token", () => {
