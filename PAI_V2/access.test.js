@@ -46,7 +46,7 @@ test("consulta a liberação pública do PAI", async () => {
   }]);
 });
 
-test("envia results e results_meta vazio pelo RPC público", async () => {
+test("envia results e as pontuações em results_meta pelo RPC público", async () => {
   const calls = [];
   const client = {
     async rpc(name, payload) {
@@ -55,11 +55,17 @@ test("envia results e results_meta vazio pelo RPC público", async () => {
     }
   };
   const results = [{ pergunta: "Tenho conflitos internos.", resposta: "Um pouco verdadeiro" }];
+  const resultsMeta = {
+    validade_infrequencia: 5,
+    queixas_somaticas_total: 21,
+    ansiedade_total: 18,
+    agressividade_total: 9
+  };
 
   await access.submitPatientResponse(client, {
     search: "?token=token-valido&form=PAI_V2",
     results,
-    resultsMeta: {}
+    resultsMeta
   });
 
   assert.equal(calls[0].name, "submit_public_patient_form_response");
@@ -69,7 +75,7 @@ test("envia results e results_meta vazio pelo RPC público", async () => {
     "PAI - Inventário de Avaliação da Personalidade"
   );
   assert.deepEqual(calls[0].payload.p_results, results);
-  assert.deepEqual(calls[0].payload.p_results_meta, {});
+  assert.deepEqual(calls[0].payload.p_results_meta, resultsMeta);
 });
 
 test("retorna à área do paciente preservando o token", () => {

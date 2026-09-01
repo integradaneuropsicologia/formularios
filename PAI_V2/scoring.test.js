@@ -3,6 +3,8 @@ const assert = require("node:assert/strict");
 
 const data = require("./data.js");
 const {
+  COMPOSITE_SCALES,
+  ITEM_GROUPS,
   buildResultsMetaPayload,
   buildResultsPayload,
   scoreResponses,
@@ -41,12 +43,25 @@ test("mantém todos os itens em português claro", () => {
   assert.match(data.questions[339].text, /suicidar/i);
 });
 
+test("associa os 344 itens uma única vez aos 42 grupos de pontuação", () => {
+  const assignedItems = Object.values(ITEM_GROUPS).flat();
+
+  assert.equal(Object.keys(ITEM_GROUPS).length, 42);
+  assert.equal(assignedItems.length, 344);
+  assert.equal(new Set(assignedItems).size, 344);
+  assert.deepEqual(
+    [...assignedItems].sort((a, b) => a - b),
+    Array.from({ length: 344 }, (_, index) => index + 1)
+  );
+  assert.equal(Object.keys(COMPOSITE_SCALES).length, 10);
+});
+
 test("divide o preenchimento em 18 blocos de até 20 itens", () => {
   assert.equal(data.itemsPerPage, 20);
   assert.equal(Math.ceil(data.questions.length / data.itemsPerPage), 18);
 });
 
-test("envia perguntas e respostas textuais em results e results_meta vazio", () => {
+test("envia perguntas e respostas textuais e 52 pontuações em results_meta", () => {
   const scored = scoreResponses(data, completeResponses());
   const results = buildResultsPayload(scored);
   const resultsMeta = buildResultsMetaPayload(scored);
@@ -57,7 +72,35 @@ test("envia perguntas e respostas textuais em results e results_meta vazio", () 
     assert.deepEqual(Object.keys(row).sort(), ["pergunta", "resposta"]);
     assert.equal(row.resposta, "Principalmente verdadeiro");
   });
-  assert.deepEqual(resultsMeta, {});
+  assert.equal(Object.keys(resultsMeta).length, 52);
+
+  Object.entries(ITEM_GROUPS).forEach(([group, items]) => {
+    assert.equal(resultsMeta[group], items.length * 2, group);
+  });
+
+  Object.entries(COMPOSITE_SCALES).forEach(([scale, groups]) => {
+    const expected = groups.reduce((total, group) => total + resultsMeta[group], 0);
+    assert.equal(resultsMeta[scale], expected, scale);
+  });
+
+  assert.equal(resultsMeta.queixas_somaticas_total, 48);
+  assert.equal(resultsMeta.caracteristicas_borderline_total, 48);
+  assert.equal(resultsMeta.agressividade_total, 36);
+  assert.equal(Object.hasOwn(resultsMeta, "validade_inconsistencia"), false);
+});
+
+test("calcula as somas pelos números dos itens e pelos pontos de 0 a 3", () => {
+  const responses = completeResponses("totalmente_falso");
+
+  ITEM_GROUPS.ansiedade_cognitiva.forEach((item) => {
+    responses[`item_${item}`] = "muito_verdadeiro";
+  });
+
+  const resultsMeta = buildResultsMetaPayload(scoreResponses(data, responses));
+
+  assert.equal(resultsMeta.ansiedade_cognitiva, 24);
+  assert.equal(resultsMeta.ansiedade_afetiva, 0);
+  assert.equal(resultsMeta.ansiedade_total, 24);
 });
 
 test("impede o payload enquanto houver item sem resposta", () => {
