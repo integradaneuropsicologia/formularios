@@ -202,19 +202,19 @@ function renderQuestions() {
     fieldset.dataset.questionId = question.id;
 
     const legend = document.createElement("legend");
-    const itemNumber = document.createElement("span");
-    itemNumber.className = "question-number";
-    itemNumber.textContent = String(question.number);
+    const itemCode = document.createElement("span");
+    itemCode.className = "question-code";
+    itemCode.textContent = question.code;
 
     const itemText = document.createElement("span");
     itemText.className = "question-text";
     itemText.textContent = question.text;
 
-    legend.append(itemNumber, itemText);
+    legend.append(itemCode, itemText);
 
     const options = document.createElement("div");
     options.className = "response-options";
-    options.setAttribute("aria-label", `Alternativas do item ${question.number}`);
+    options.setAttribute("aria-label", `Alternativas do item ${question.code}`);
 
     data.responses.forEach((option) => {
       options.append(createResponseOption(question, option));

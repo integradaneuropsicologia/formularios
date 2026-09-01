@@ -1,5 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const data = require("./data.js");
 const {
@@ -15,12 +17,17 @@ function completeResponses(value = "moderadamente") {
   );
 }
 
-test("mantém 210 itens em sequência e quatro alternativas", () => {
+test("mantém 210 itens em sequência, com os códigos do protocolo", () => {
   assert.doesNotThrow(() => validateData(data));
   assert.equal(data.questions.length, 210);
   assert.equal(data.questions[0].number, 1);
   assert.equal(data.questions.at(-1).number, 210);
   assert.equal(new Set(data.questions.map((question) => question.id)).size, 210);
+  assert.equal(new Set(data.questions.map((question) => question.code)).size, 210);
+  assert.equal(data.questions[0].code, "A018");
+  assert.equal(data.questions[30].code, "B111");
+  assert.equal(data.questions[61].code, "i304");
+  assert.equal(data.questions.at(-1).code, "i679");
   assert.deepEqual(
     data.responses.map((option) => option.score),
     [1, 2, 3, 4]
@@ -34,12 +41,20 @@ test("não exibe pontuações numéricas nas alternativas", () => {
   });
 });
 
-test("remove todos os códigos técnicos das perguntas", () => {
+test("mantém o código separado do texto das perguntas", () => {
   data.questions.forEach((question) => {
+    assert.match(question.code, /^(?:A|B|i)\d{3}$/);
     assert.doesNotMatch(question.text, /^(?:A|B|i)\d{3}\b/);
   });
   assert.match(data.questions[0].text, /tomem decisões importantes/i);
   assert.equal(data.questions.at(-1).text, "Minto sem remorso.");
+});
+
+test("exibe o código do protocolo no marcador visual", () => {
+  const scriptSource = fs.readFileSync(path.join(__dirname, "script.js"), "utf8");
+
+  assert.match(scriptSource, /itemCode\.textContent = question\.code/);
+  assert.doesNotMatch(scriptSource, /itemNumber\.textContent = String\(question\.number\)/);
 });
 
 test("divide o preenchimento em 11 blocos de até 20 itens", () => {

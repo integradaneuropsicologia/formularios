@@ -214,14 +214,31 @@
     [210, "Minto sem remorso."]
   ];
 
+  const itemCodes = `
+    A018 A001 A003 A014 A021 A028 A031 A032 A034 A052 A055 A056 A058 A059 A062 A064 A067 A069 A070 A077 A082 A083 A095 A096 A099 A101 A102 A103 A104 A107
+    B111 B115 B117 B120 B125 B131 B133 B137 B138 B147 B149 B151 B154 B159 B165 B171 B172 B173 B176 B178 B190 B191 B193 B195 B198 B199 B204 B207 B211 B212 B215
+    i304 i305 i306 i313 i314 i315 i317 i318 i319 i321 i322 i323 i328 i329 i331 i332 i334 i335 i341 i342 i348 i349 i351 i359 i362 i364 i366 i367 i369 i372 i373 i374 i375 i376 i377 i380 i385 i387 i394 i396 i402 i403 i406 i407 i408 i416 i417 i418 i419 i420 i425 i426 i435 i436 i437 i438 i439 i441 i444 i445 i446 i449 i456 i457 i458 i459 i466 i468 i469 i470 i471 i477 i481 i483 i486 i487 i488 i489 i494 i496 i499 i503 i504 i506 i507 i508 i516 i517 i520 i525 i530 i537 i539 i540 i541 i542 i546 i549 i551 i552 i553 i560 i561 i562 i565 i566 i567 i571 i579 i581 i586 i587 i592 i594 i596 i597 i598 i605 i606 i607 i610 i611 i612 i616 i625 i626 i627 i629 i630 i634 i638 i639 i643 i644 i645 i648 i650 i658 i659 i660 i662 i663 i664 i670 i671 i672 i674 i676 i679
+  `.trim().split(/\s+/);
+
+  if (itemCodes.length !== rawQuestions.length) {
+    throw new Error("A quantidade de códigos não corresponde à quantidade de itens.");
+  }
+
   const questions = rawQuestions.map(([number, text], index) => {
     if (number !== index + 1) {
       throw new Error("Sequência inválida no item " + number + ".");
     }
 
+    const code = itemCodes[index];
+
+    if (!/^(?:A|B|i)\d{3}$/.test(code)) {
+      throw new Error("Código inválido no item " + number + ".");
+    }
+
     return {
       id: "item_" + number,
       number,
+      code,
       text
     };
   });

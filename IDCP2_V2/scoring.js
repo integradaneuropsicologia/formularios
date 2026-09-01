@@ -15,10 +15,21 @@
       throw new Error("As alternativas do IDCP-2 devem valer de 1 a 4.");
     }
 
+    const itemCodes = new Set();
+
     data.questions.forEach((question, index) => {
       if (question.number !== index + 1 || question.id !== `item_${index + 1}`) {
         throw new Error(`Sequência inválida no item ${index + 1}.`);
       }
+
+      if (!/^(?:A|B|i)\d{3}$/.test(question.code || "")) {
+        throw new Error(`Código inválido no item ${index + 1}.`);
+      }
+
+      if (itemCodes.has(question.code)) {
+        throw new Error(`Código repetido no item ${index + 1}.`);
+      }
+      itemCodes.add(question.code);
 
       if (!String(question.text || "").trim()) {
         throw new Error(`O item ${index + 1} está sem texto.`);
