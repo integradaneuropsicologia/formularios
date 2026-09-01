@@ -96,6 +96,16 @@
     ]
   });
 
+  const REVERSED_ITEMS = Object.freeze([
+    1, 2, 8, 11, 18, 24, 32, 37, 41, 42, 63, 64, 75, 77, 80, 81, 82, 88,
+    94, 103, 104, 109, 112, 115, 121, 122, 124, 125, 128, 136, 139, 142, 144,
+    146, 152, 160, 161, 162, 164, 172, 173, 174, 178, 184, 185, 186, 190, 193,
+    197, 201, 211, 213, 216, 217, 218, 221, 224, 225, 226, 227, 229, 230, 235,
+    237, 240, 242, 244, 246, 252, 257, 259, 264, 267, 270, 277, 287, 290, 291,
+    294, 295, 298, 299, 301, 304, 306, 307, 308, 310, 313, 318, 319, 320, 326,
+    334, 336, 341, 342, 343
+  ]);
+
   function validateData(data) {
     if (!data || !Array.isArray(data.questions) || data.questions.length !== 344) {
       throw new Error("O PAI deve conter exatamente 344 itens.");
@@ -152,10 +162,25 @@
         }
       });
     });
+
+    if (new Set(REVERSED_ITEMS).size !== REVERSED_ITEMS.length) {
+      throw new Error("A lista de itens invertidos contém repetições.");
+    }
+
+    REVERSED_ITEMS.forEach((item) => {
+      if (!Number.isInteger(item) || item < 1 || item > data.questions.length) {
+        throw new Error(`O item invertido ${item} é inválido.`);
+      }
+    });
   }
 
   function getResponseOption(data, value) {
     return data.responses.find((option) => option.value === value) || null;
+  }
+
+  function correctedItemScore(item, score) {
+    const numericScore = Number(score);
+    return REVERSED_ITEMS.includes(item) ? 3 - numericScore : numericScore;
   }
 
   function scoreResponses(data, responses = {}) {
@@ -167,7 +192,7 @@
       const option = getResponseOption(data, responses[question.id]);
       if (option) {
         answeredCount += 1;
-        itemScores[question.number] = Number(option.score);
+        itemScores[question.number] = correctedItemScore(question.number, option.score);
       }
 
       return {
@@ -226,8 +251,10 @@
   const api = Object.freeze({
     COMPOSITE_SCALES,
     ITEM_GROUPS,
+    REVERSED_ITEMS,
     buildResultsMetaPayload,
     buildResultsPayload,
+    correctedItemScore,
     getResponseOption,
     scoreResponses,
     validateData

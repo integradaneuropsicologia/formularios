@@ -5,8 +5,10 @@ const data = require("./data.js");
 const {
   COMPOSITE_SCALES,
   ITEM_GROUPS,
+  REVERSED_ITEMS,
   buildResultsMetaPayload,
   buildResultsPayload,
+  correctedItemScore,
   scoreResponses,
   validateData
 } = require("./scoring.js");
@@ -56,6 +58,17 @@ test("associa os 344 itens uma única vez aos 42 grupos de pontuação", () => {
   assert.equal(Object.keys(COMPOSITE_SCALES).length, 10);
 });
 
+test("inverte somente os itens configurados", () => {
+  assert.equal(REVERSED_ITEMS.length, 98);
+  assert.equal(new Set(REVERSED_ITEMS).size, 98);
+  assert.equal(correctedItemScore(1, 0), 3);
+  assert.equal(correctedItemScore(1, 3), 0);
+  assert.equal(correctedItemScore(3, 0), 0);
+  assert.equal(correctedItemScore(3, 3), 3);
+  assert.equal(REVERSED_ITEMS.includes(343), true);
+  assert.equal(REVERSED_ITEMS.includes(344), false);
+});
+
 test("divide o preenchimento em 18 blocos de até 20 itens", () => {
   assert.equal(data.itemsPerPage, 20);
   assert.equal(Math.ceil(data.questions.length / data.itemsPerPage), 18);
@@ -74,8 +87,14 @@ test("envia perguntas e respostas textuais e 52 pontuações em results_meta", (
   });
   assert.equal(Object.keys(resultsMeta).length, 52);
 
+  const reversedItems = new Set(REVERSED_ITEMS);
+
   Object.entries(ITEM_GROUPS).forEach(([group, items]) => {
-    assert.equal(resultsMeta[group], items.length * 2, group);
+    const expected = items.reduce(
+      (total, item) => total + (reversedItems.has(item) ? 1 : 2),
+      0
+    );
+    assert.equal(resultsMeta[group], expected, group);
   });
 
   Object.entries(COMPOSITE_SCALES).forEach(([scale, groups]) => {
@@ -83,17 +102,25 @@ test("envia perguntas e respostas textuais e 52 pontuações em results_meta", (
     assert.equal(resultsMeta[scale], expected, scale);
   });
 
-  assert.equal(resultsMeta.queixas_somaticas_total, 48);
-  assert.equal(resultsMeta.caracteristicas_borderline_total, 48);
-  assert.equal(resultsMeta.agressividade_total, 36);
+  assert.equal(resultsMeta.queixas_somaticas_total, 43);
+  assert.equal(resultsMeta.caracteristicas_borderline_total, 43);
+  assert.equal(resultsMeta.agressividade_total, 29);
   assert.equal(Object.hasOwn(resultsMeta, "validade_inconsistencia"), false);
 });
 
 test("calcula as somas pelos números dos itens e pelos pontos de 0 a 3", () => {
-  const responses = completeResponses("totalmente_falso");
+  const reversedItems = new Set(REVERSED_ITEMS);
+  const responses = Object.fromEntries(
+    data.questions.map((question) => [
+      question.id,
+      reversedItems.has(question.number) ? "muito_verdadeiro" : "totalmente_falso"
+    ])
+  );
 
   ITEM_GROUPS.ansiedade_cognitiva.forEach((item) => {
-    responses[`item_${item}`] = "muito_verdadeiro";
+    responses[`item_${item}`] = reversedItems.has(item)
+      ? "totalmente_falso"
+      : "muito_verdadeiro";
   });
 
   const resultsMeta = buildResultsMetaPayload(scoreResponses(data, responses));
