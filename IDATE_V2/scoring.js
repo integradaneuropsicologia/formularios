@@ -1,7 +1,9 @@
 (function initializeIdateScoring(globalScope) {
   "use strict";
 
-  const EXPECTED_REVERSED_ITEMS = [1, 6, 7, 10, 13, 16, 19];
+  const EXPECTED_REVERSED_ITEMS = [1, 3, 6, 7, 10, 13, 14, 16, 19];
+  const TRAIT_PRESENT_ITEMS = [2, 4, 5, 8, 9, 11, 12, 15, 17, 18, 20];
+  const TRAIT_ABSENT_ITEMS = [1, 3, 6, 7, 10, 13, 14, 16, 19];
 
   function itemNumber(question) {
     return Number(String(question?.id || "").replace("item_", ""));
@@ -31,6 +33,15 @@
     if (JSON.stringify(reversedItems) !== JSON.stringify(EXPECTED_REVERSED_ITEMS)) {
       throw new Error("A lista de itens invertidos do IDATE-Traço está incorreta.");
     }
+
+    const domainItems = [...TRAIT_PRESENT_ITEMS, ...TRAIT_ABSENT_ITEMS];
+    if (
+      domainItems.length !== data.questions.length ||
+      new Set(domainItems).size !== data.questions.length ||
+      domainItems.some((item) => item < 1 || item > data.questions.length)
+    ) {
+      throw new Error("Os domínios do IDATE-Traço devem cobrir os 20 itens uma única vez.");
+    }
   }
 
   function getResponseOption(data, value) {
@@ -42,6 +53,7 @@
 
     let totalScore = 0;
     let answeredCount = 0;
+    const itemScores = {};
 
     const rows = data.questions.map((question) => {
       const option = getResponseOption(data, responses[question.id]);
@@ -55,6 +67,7 @@
       if (option) {
         answeredCount += 1;
         totalScore += correctedScore;
+        itemScores[itemNumber(question)] = correctedScore;
       }
 
       return {
@@ -64,8 +77,20 @@
       };
     });
 
+    const traitPresentScore = TRAIT_PRESENT_ITEMS.reduce(
+      (total, item) => total + (itemScores[item] ?? 0),
+      0
+    );
+    const traitAbsentScore = TRAIT_ABSENT_ITEMS.reduce(
+      (total, item) => total + (itemScores[item] ?? 0),
+      0
+    );
+
     return {
       rows,
+      itemScores,
+      traitPresentScore,
+      traitAbsentScore,
       totalScore,
       answeredCount,
       unansweredCount: data.questions.length - answeredCount,
@@ -90,12 +115,17 @@
   function buildResultsMetaPayload(scored) {
     requireComplete(scored);
     return {
-      pontuacao_bruta_total: scored.totalScore
+      pontuacao_bruta_total: scored.totalScore,
+      ansiedade_traco_presente: scored.traitPresentScore,
+      ansiedade_traco_ausente_bem_estar_emocional: scored.traitAbsentScore,
+      score_total: scored.totalScore
     };
   }
 
   const api = Object.freeze({
     EXPECTED_REVERSED_ITEMS,
+    TRAIT_ABSENT_ITEMS,
+    TRAIT_PRESENT_ITEMS,
     buildResultsMetaPayload,
     buildResultsPayload,
     getResponseOption,

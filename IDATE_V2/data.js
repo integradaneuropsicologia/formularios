@@ -21,7 +21,7 @@
       {
         id: "item_3",
         text: "Tenho vontade de chorar",
-        reverse: false
+        reverse: true
       },
       {
         id: "item_4",
@@ -76,7 +76,7 @@
       {
         id: "item_14",
         text: "Evito ter que enfrentar crises ou problemas",
-        reverse: false
+        reverse: true
       },
       {
         id: "item_15",

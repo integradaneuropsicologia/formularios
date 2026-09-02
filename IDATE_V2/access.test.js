@@ -62,7 +62,10 @@ test("envia o payload estrito pelo RPC público", async () => {
       resposta: "Quase nunca"
     }],
     resultsMeta: {
-      pontuacao_bruta_total: 4
+      pontuacao_bruta_total: 49,
+      ansiedade_traco_presente: 22,
+      ansiedade_traco_ausente_bem_estar_emocional: 27,
+      score_total: 49
     }
   });
 
@@ -74,7 +77,10 @@ test("envia o payload estrito pelo RPC público", async () => {
     resposta: "Quase nunca"
   }]);
   assert.deepEqual(calls[0].payload.p_results_meta, {
-    pontuacao_bruta_total: 4
+    pontuacao_bruta_total: 49,
+    ansiedade_traco_presente: 22,
+    ansiedade_traco_ausente_bem_estar_emocional: 27,
+    score_total: 49
   });
 });
 
