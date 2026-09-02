@@ -70,7 +70,7 @@ test("classifica todas as faixas de severidade nos limites corretos", () => {
   assert.throws(() => classifySeverity(41), /entre 0 e 40/);
 });
 
-test("envia somente pergunta e resposta em results e total e severidade em results_meta", () => {
+test("envia pergunta e resposta em results e os subtotais, total e severidade em results_meta", () => {
   const values = [
     "score_0",
     "score_1",
@@ -89,6 +89,8 @@ test("envia somente pergunta e resposta em results e total e severidade em resul
 
   const scored = scoreResponses(data, responses);
   assert.equal(scored.complete, true);
+  assert.equal(scored.obsessionsScore, 10);
+  assert.equal(scored.compulsionsScore, 10);
   assert.equal(scored.totalScore, 20);
   assert.equal(scored.severity, "Moderada");
 
@@ -101,9 +103,26 @@ test("envia somente pergunta e resposta em results e total e severidade em resul
   });
 
   assert.deepEqual(buildResultsMetaPayload(scored), {
+    obsessoes: 10,
+    compulsoes: 10,
+    total_y_bocs: 20,
     pontuacao_bruta_total: 20,
     severidade: "Moderada"
   });
+});
+
+test("separa corretamente os itens 1 a 5 dos itens 6 a 10", () => {
+  const responses = Object.fromEntries(
+    data.questions.map((question, index) => [
+      question.id,
+      index < 5 ? "score_1" : "score_3"
+    ])
+  );
+
+  const scored = scoreResponses(data, responses);
+  assert.equal(scored.obsessionsScore, 5);
+  assert.equal(scored.compulsionsScore, 15);
+  assert.equal(scored.totalScore, 20);
 });
 
 test("impede a criação do payload enquanto houver item sem resposta", () => {

@@ -59,14 +59,23 @@
     validateData(data);
 
     let totalScore = 0;
+    let obsessionsScore = 0;
+    let compulsionsScore = 0;
     let answeredCount = 0;
 
     const rows = data.questions.map((question) => {
       const option = getResponseOption(question, responses[question.id]);
 
       if (option) {
+        const score = Number(option.score);
         answeredCount += 1;
-        totalScore += Number(option.score);
+        totalScore += score;
+
+        if (question.section === "obsessoes") {
+          obsessionsScore += score;
+        } else {
+          compulsionsScore += score;
+        }
       }
 
       return {
@@ -77,6 +86,8 @@
 
     return {
       rows,
+      obsessionsScore,
+      compulsionsScore,
       totalScore,
       severity: classifySeverity(totalScore),
       answeredCount,
@@ -102,6 +113,9 @@
   function buildResultsMetaPayload(scored) {
     requireComplete(scored);
     return {
+      obsessoes: scored.obsessionsScore,
+      compulsoes: scored.compulsionsScore,
+      total_y_bocs: scored.totalScore,
       pontuacao_bruta_total: scored.totalScore,
       severidade: scored.severity
     };

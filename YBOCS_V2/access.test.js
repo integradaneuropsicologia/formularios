@@ -46,7 +46,7 @@ test("consulta a liberação pública pelo RPC esperado", async () => {
   }]);
 });
 
-test("envia perguntas, respostas, pontuação total e severidade pelo RPC público", async () => {
+test("envia perguntas, respostas, subtotais, pontuação total e severidade pelo RPC público", async () => {
   const calls = [];
   const client = {
     async rpc(name, payload) {
@@ -62,6 +62,9 @@ test("envia perguntas, respostas, pontuação total e severidade pelo RPC públi
       resposta: "Faz algum esforço para resistir"
     }],
     resultsMeta: {
+      obsessoes: 10,
+      compulsoes: 10,
+      total_y_bocs: 20,
       pontuacao_bruta_total: 20,
       severidade: "Moderada"
     }
@@ -78,6 +81,9 @@ test("envia perguntas, respostas, pontuação total e severidade pelo RPC públi
     resposta: "Faz algum esforço para resistir"
   }]);
   assert.deepEqual(calls[0].payload.p_results_meta, {
+    obsessoes: 10,
+    compulsoes: 10,
+    total_y_bocs: 20,
     pontuacao_bruta_total: 20,
     severidade: "Moderada"
   });
