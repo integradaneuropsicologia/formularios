@@ -96,6 +96,62 @@
     ]
   });
 
+  const RESULTS_META_DEFINITIONS = Object.freeze([
+    { key: "validade_inconsistencia", label: "Inconsistência" },
+    { key: "validade_infrequencia", label: "Infrequência" },
+    { key: "validade_impressao_negativa", label: "Impressão negativa" },
+    { key: "validade_impressao_positiva", label: "Impressão positiva" },
+    { key: "queixas_somaticas_total", label: "Queixas somáticas" },
+    { key: "queixas_somaticas_conversao", label: "Queixas somáticas — Conversão" },
+    { key: "queixas_somaticas_somatizacao", label: "Queixas somáticas — Somatização" },
+    { key: "queixas_somaticas_preocupacoes_saude", label: "Queixas somáticas — Preocupações com a saúde" },
+    { key: "ansiedade_total", label: "Ansiedade" },
+    { key: "ansiedade_cognitiva", label: "Ansiedade — Cognitiva" },
+    { key: "ansiedade_afetiva", label: "Ansiedade — Afetiva / emocional" },
+    { key: "ansiedade_fisiologica", label: "Ansiedade — Fisiológica" },
+    { key: "transtornos_relacionados_ansiedade_total", label: "Transtornos relacionados à ansiedade" },
+    { key: "transtornos_ansiedade_obsessivo_compulsivo", label: "Transtornos relacionados à ansiedade — Obsessivo-compulsivo" },
+    { key: "transtornos_ansiedade_fobias", label: "Transtornos relacionados à ansiedade — Fobias" },
+    { key: "transtornos_ansiedade_estresse_traumatico", label: "Transtornos relacionados à ansiedade — Estresse traumático" },
+    { key: "depressao_total", label: "Depressão" },
+    { key: "depressao_cognitiva", label: "Depressão — Cognitiva" },
+    { key: "depressao_afetiva", label: "Depressão — Afetiva / emocional" },
+    { key: "depressao_fisiologica", label: "Depressão — Fisiológica" },
+    { key: "mania_total", label: "Mania" },
+    { key: "mania_nivel_atividade", label: "Mania — Nível de atividade" },
+    { key: "mania_grandiosidade", label: "Mania — Grandiosidade" },
+    { key: "mania_irritabilidade", label: "Mania — Irritabilidade" },
+    { key: "paranoia_total", label: "Paranoia" },
+    { key: "paranoia_hipervigilancia", label: "Paranoia — Hipervigilância" },
+    { key: "paranoia_perseguicao", label: "Paranoia — Perseguição" },
+    { key: "paranoia_ressentimento", label: "Paranoia — Ressentimento" },
+    { key: "esquizofrenia_total", label: "Esquizofrenia" },
+    { key: "esquizofrenia_experiencias_psicoticas", label: "Esquizofrenia — Experiências psicóticas" },
+    { key: "esquizofrenia_isolamento_social", label: "Esquizofrenia — Isolamento social" },
+    { key: "esquizofrenia_transtorno_pensamento", label: "Esquizofrenia — Transtorno do pensamento" },
+    { key: "caracteristicas_borderline_total", label: "Características borderline" },
+    { key: "borderline_instabilidade_afetiva", label: "Características borderline — Instabilidade afetiva" },
+    { key: "borderline_problemas_identidade", label: "Características borderline — Problemas de identidade" },
+    { key: "borderline_relacoes_problematicas", label: "Características borderline — Relações negativas / problemáticas" },
+    { key: "borderline_autoagressao_impulsividade", label: "Características borderline — Autoagressão" },
+    { key: "caracteristicas_antissociais_total", label: "Características antissociais" },
+    { key: "antissociais_condutas_antissociais", label: "Características antissociais — Comportamentos antissociais" },
+    { key: "antissociais_egocentrismo", label: "Características antissociais — Egocentrismo" },
+    { key: "antissociais_busca_sensacoes", label: "Características antissociais — Busca de estímulos / comportamentos de risco" },
+    { key: "problemas_alcool", label: "Problemas com álcool" },
+    { key: "problemas_drogas", label: "Problemas com drogas" },
+    { key: "agressividade_total", label: "Agressão" },
+    { key: "agressividade_atitude_agressiva", label: "Agressão — Atitude agressiva" },
+    { key: "agressividade_verbal", label: "Agressão — Agressão verbal" },
+    { key: "agressividade_fisica", label: "Agressão — Agressão física" },
+    { key: "ideacao_suicida", label: "Ideação suicida" },
+    { key: "estresse", label: "Estresse" },
+    { key: "falta_suporte_social", label: "Falta de suporte social" },
+    { key: "rejeicao_resistencia_tratamento", label: "Rejeição / resistência ao tratamento" },
+    { key: "dominancia", label: "Dominância" },
+    { key: "calor_amabilidade_interpessoal", label: "Calor / amabilidade interpessoal" }
+  ].map(Object.freeze));
+
   const REVERSED_ITEMS = Object.freeze([
     1, 2, 8, 11, 18, 24, 32, 37, 41, 42, 63, 64, 75, 77, 80, 81, 82, 88,
     94, 103, 104, 109, 112, 115, 121, 122, 124, 125, 128, 136, 139, 142, 144,
@@ -242,15 +298,20 @@
 
   function buildResultsMetaPayload(scored) {
     requireComplete(scored);
-    return {
-      ...scored.groupScores,
-      ...scored.compositeScores
-    };
+    return RESULTS_META_DEFINITIONS.map((definition, index) => ({
+      order: index + 1,
+      key: definition.key,
+      label: definition.label,
+      value: Object.prototype.hasOwnProperty.call(scored.groupScores, definition.key)
+        ? scored.groupScores[definition.key]
+        : (scored.compositeScores[definition.key] ?? null)
+    }));
   }
 
   const api = Object.freeze({
     COMPOSITE_SCALES,
     ITEM_GROUPS,
+    RESULTS_META_DEFINITIONS,
     REVERSED_ITEMS,
     buildResultsMetaPayload,
     buildResultsPayload,

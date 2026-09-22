@@ -6,6 +6,7 @@ const {
   COMPOSITE_SCALES,
   ITEM_GROUPS,
   REVERSED_ITEMS,
+  RESULTS_META_DEFINITIONS,
   buildResultsMetaPayload,
   buildResultsPayload,
   correctedItemScore,
@@ -74,7 +75,7 @@ test("divide o preenchimento em 18 blocos de até 20 itens", () => {
   assert.equal(Math.ceil(data.questions.length / data.itemsPerPage), 18);
 });
 
-test("envia perguntas e respostas textuais e 52 pontuações em results_meta", () => {
+test("envia perguntas, respostas e 53 domínios ordenados em results_meta", () => {
   const scored = scoreResponses(data, completeResponses());
   const results = buildResultsPayload(scored);
   const resultsMeta = buildResultsMetaPayload(scored);
@@ -85,7 +86,22 @@ test("envia perguntas e respostas textuais e 52 pontuações em results_meta", (
     assert.deepEqual(Object.keys(row).sort(), ["pergunta", "resposta"]);
     assert.equal(row.resposta, "Principalmente verdadeiro");
   });
-  assert.equal(Object.keys(resultsMeta).length, 52);
+  assert.equal(resultsMeta.length, 53);
+  assert.deepEqual(
+    resultsMeta.map((entry) => entry.order),
+    Array.from({ length: 53 }, (_, index) => index + 1)
+  );
+  assert.deepEqual(
+    resultsMeta.map((entry) => entry.key),
+    RESULTS_META_DEFINITIONS.map((definition) => definition.key)
+  );
+  resultsMeta.forEach((entry) => {
+    assert.deepEqual(Object.keys(entry).sort(), ["key", "label", "order", "value"]);
+  });
+
+  const resultsMetaByKey = Object.fromEntries(
+    resultsMeta.map((entry) => [entry.key, entry.value])
+  );
 
   const reversedItems = new Set(REVERSED_ITEMS);
 
@@ -94,18 +110,20 @@ test("envia perguntas e respostas textuais e 52 pontuações em results_meta", (
       (total, item) => total + (reversedItems.has(item) ? 1 : 2),
       0
     );
-    assert.equal(resultsMeta[group], expected, group);
+    assert.equal(resultsMetaByKey[group], expected, group);
   });
 
   Object.entries(COMPOSITE_SCALES).forEach(([scale, groups]) => {
-    const expected = groups.reduce((total, group) => total + resultsMeta[group], 0);
-    assert.equal(resultsMeta[scale], expected, scale);
+    const expected = groups.reduce((total, group) => total + resultsMetaByKey[group], 0);
+    assert.equal(resultsMetaByKey[scale], expected, scale);
   });
 
-  assert.equal(resultsMeta.queixas_somaticas_total, 43);
-  assert.equal(resultsMeta.caracteristicas_borderline_total, 43);
-  assert.equal(resultsMeta.agressividade_total, 29);
-  assert.equal(Object.hasOwn(resultsMeta, "validade_inconsistencia"), false);
+  assert.equal(resultsMetaByKey.validade_inconsistencia, null);
+  assert.equal(resultsMetaByKey.queixas_somaticas_total, 43);
+  assert.equal(resultsMetaByKey.caracteristicas_borderline_total, 43);
+  assert.equal(resultsMetaByKey.agressividade_total, 29);
+  assert.equal(resultsMeta[0].label, "Inconsistência");
+  assert.equal(resultsMeta.at(-1).label, "Calor / amabilidade interpessoal");
 });
 
 test("calcula as somas pelos números dos itens e pelos pontos de 0 a 3", () => {
@@ -123,7 +141,10 @@ test("calcula as somas pelos números dos itens e pelos pontos de 0 a 3", () => 
       : "muito_verdadeiro";
   });
 
-  const resultsMeta = buildResultsMetaPayload(scoreResponses(data, responses));
+  const resultsMeta = Object.fromEntries(
+    buildResultsMetaPayload(scoreResponses(data, responses))
+      .map((entry) => [entry.key, entry.value])
+  );
 
   assert.equal(resultsMeta.ansiedade_cognitiva, 24);
   assert.equal(resultsMeta.ansiedade_afetiva, 0);

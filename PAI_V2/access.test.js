@@ -55,12 +55,11 @@ test("envia results e as pontuações em results_meta pelo RPC público", async 
     }
   };
   const results = [{ pergunta: "Tenho conflitos internos.", resposta: "Um pouco verdadeiro" }];
-  const resultsMeta = {
-    validade_infrequencia: 5,
-    queixas_somaticas_total: 21,
-    ansiedade_total: 18,
-    agressividade_total: 9
-  };
+  const resultsMeta = [
+    { order: 1, key: "validade_inconsistencia", label: "Inconsistência", value: null },
+    { order: 2, key: "validade_infrequencia", label: "Infrequência", value: 5 },
+    { order: 5, key: "queixas_somaticas_total", label: "Queixas somáticas", value: 21 }
+  ];
 
   await access.submitPatientResponse(client, {
     search: "?token=token-valido&form=PAI_V2",
