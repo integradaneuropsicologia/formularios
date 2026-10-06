@@ -189,17 +189,13 @@
   function buildResultsMetaPayload(scored) {
     requireComplete(scored);
 
-    return Object.fromEntries(scored.factors.map((factor) => [
-      slugFactor(factor),
-      {
-        fator: `Fator ${factor.code.slice(1)} - ${factor.name}`,
-        pontos_brutos: factor.rawScore,
-        score_total: factor.scoreTotal,
-        percentil: factor.percentile,
-        classificacao: factor.classification,
-        interpretacao: factor.interpretation
-      }
-    ]));
+    // Só o score total de cada fator, na ordem F1-F4 (é a ordem do PDF).
+    return scored.factors.map((factor, index) => ({
+      order: index + 1,
+      key: `${slugFactor(factor)}_score_total`,
+      label: `Fator ${factor.code.slice(1)} ${factor.name.toLowerCase()} > Score total`,
+      value: factor.scoreTotal
+    }));
   }
 
   const api = Object.freeze({

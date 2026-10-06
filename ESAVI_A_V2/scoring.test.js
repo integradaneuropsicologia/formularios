@@ -75,7 +75,7 @@ test("aplica exatamente os limites da Tabela 18", () => {
   });
 });
 
-test("envia perguntas e respostas em results e os quatro fatores em results_meta", () => {
+test("envia perguntas e respostas em results e só o score total dos quatro fatores em results_meta", () => {
   const responses = Object.fromEntries(
     data.questions.map((question) => [question.id, "as_vezes"])
   );
@@ -89,20 +89,15 @@ test("envia perguntas e respostas em results e os quatro fatores em results_meta
     assert.equal(row.resposta, "Às vezes");
   });
 
-  assert.equal(Object.keys(resultsMeta).length, 4);
-  Object.values(resultsMeta).forEach((factor) => {
-    assert.deepEqual(Object.keys(factor).sort(), [
-      "classificacao",
-      "fator",
-      "interpretacao",
-      "percentil",
-      "pontos_brutos",
-      "score_total"
-    ]);
-    assert.equal(factor.score_total, factor.pontos_brutos);
-    assert.ok(factor.percentil);
-    assert.ok(factor.classificacao);
-    assert.ok(factor.interpretacao);
+  assert.deepEqual(resultsMeta.map(({ order, key, label }) => ({ order, key, label })), [
+    { order: 1, key: "fator_1_falta_de_concentracao_e_persistencia_score_total", label: "Fator 1 falta de concentração e persistência > Score total" },
+    { order: 2, key: "fator_2_controle_cognitivo_score_total", label: "Fator 2 controle cognitivo > Score total" },
+    { order: 3, key: "fator_3_planejamento_futuro_score_total", label: "Fator 3 planejamento futuro > Score total" },
+    { order: 4, key: "fator_4_audacia_e_temeridade_score_total", label: "Fator 4 audácia e temeridade > Score total" }
+  ]);
+  resultsMeta.forEach((item, index) => {
+    assert.deepEqual(Object.keys(item), ["order", "key", "label", "value"]);
+    assert.equal(item.value, scored.factors[index].scoreTotal);
   });
 });
 

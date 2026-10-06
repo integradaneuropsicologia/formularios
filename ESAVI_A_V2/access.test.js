@@ -55,16 +55,14 @@ test("envia results e results_meta pelo RPC público", async () => {
     }
   };
   const results = [{ pergunta: "Sou uma pessoa ansiosa.", resposta: "Às vezes" }];
-  const resultsMeta = {
-    fator_1_falta_de_concentracao_e_persistencia: {
-      fator: "Fator 1 - Falta de concentração e persistência",
-      pontos_brutos: 24,
-      score_total: 24,
-      percentil: "Percentis 41 a 60",
-      classificacao: "Médio",
-      interpretacao: "Interpretação"
+  const resultsMeta = [
+    {
+      order: 1,
+      key: "fator_1_falta_de_concentracao_e_persistencia_score_total",
+      label: "Fator 1 falta de concentração e persistência > Score total",
+      value: 24
     }
-  };
+  ];
 
   await access.submitPatientResponse(client, {
     search: "?token=token-valido&form=ESAVI_A_V2",
