@@ -58,12 +58,10 @@ test("envia perguntas, respostas e escores brutos pelo RPC público", async () =
     pergunta: "Nas últimas 24 horas: Mãos e pés frios",
     resposta: "Sim"
   }];
-  const resultsMeta = {
-    issl_total_bruto: 12,
-    quadro_1_total_bruto: 4,
-    quadro_2_total_bruto: 3,
-    quadro_3_total_bruto: 5
-  };
+  const resultsMeta = [
+    { order: 1, key: "quadro_1_fisicos_bruto", label: "Quadro 1 físicos bruto", value: 3 },
+    { order: 7, key: "issl_total_bruto", label: "ISSL total bruto", value: 12 }
+  ];
 
   await access.submitPatientResponse(client, {
     search: "?token=token-valido&form=ISSL_V2",

@@ -142,25 +142,39 @@
     }));
   }
 
+  const RESULTS_META_DEFINITIONS = Object.freeze([
+    { key: "quadro_1_fisicos_bruto", label: "Quadro 1 físicos bruto" },
+    { key: "quadro_1_psicologicos_bruto", label: "Quadro 1 psicológicos bruto" },
+    { key: "quadro_2_fisicos_bruto", label: "Quadro 2 físicos bruto" },
+    { key: "quadro_2_psicologicos_bruto", label: "Quadro 2 psicológicos bruto" },
+    { key: "quadro_3_fisicos_bruto", label: "Quadro 3 físicos bruto" },
+    { key: "quadro_3_psicologicos_bruto", label: "Quadro 3 psicológicos bruto" },
+    { key: "issl_total_bruto", label: "ISSL total bruto" }
+  ].map(Object.freeze));
+
   function buildResultsMetaPayload(scored) {
     requireComplete(scored);
     const [quadro1, quadro2, quadro3] = scored.sectionScores;
-
-    return {
-      issl_total_bruto: scored.totalBruto,
+    const values = {
       quadro_1_fisicos_bruto: quadro1.fisicosBruto,
       quadro_1_psicologicos_bruto: quadro1.psicologicosBruto,
-      quadro_1_total_bruto: quadro1.totalBruto,
       quadro_2_fisicos_bruto: quadro2.fisicosBruto,
       quadro_2_psicologicos_bruto: quadro2.psicologicosBruto,
-      quadro_2_total_bruto: quadro2.totalBruto,
       quadro_3_fisicos_bruto: quadro3.fisicosBruto,
       quadro_3_psicologicos_bruto: quadro3.psicologicosBruto,
-      quadro_3_total_bruto: quadro3.totalBruto
+      issl_total_bruto: scored.totalBruto
     };
+
+    return RESULTS_META_DEFINITIONS.map((definition, index) => ({
+      order: index + 1,
+      key: definition.key,
+      label: definition.label,
+      value: values[definition.key]
+    }));
   }
 
   const api = Object.freeze({
+    RESULTS_META_DEFINITIONS,
     buildResultsMetaPayload,
     buildResultsPayload,
     findOption,

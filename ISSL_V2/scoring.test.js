@@ -96,20 +96,17 @@ test("envia as 53 perguntas e respostas em results", () => {
   assert.equal(results[52].pergunta, "No último mês: Perda do senso de humor");
 });
 
-test("envia somente os escores brutos em results_meta", () => {
+test("envia em results_meta só os sete escores brutos, na ordem do PDF", () => {
   const scored = scoreResponses(data, completeResponses("sim"));
-  assert.deepEqual(buildResultsMetaPayload(scored), {
-    issl_total_bruto: 53,
-    quadro_1_fisicos_bruto: 12,
-    quadro_1_psicologicos_bruto: 3,
-    quadro_1_total_bruto: 15,
-    quadro_2_fisicos_bruto: 10,
-    quadro_2_psicologicos_bruto: 5,
-    quadro_2_total_bruto: 15,
-    quadro_3_fisicos_bruto: 12,
-    quadro_3_psicologicos_bruto: 11,
-    quadro_3_total_bruto: 23
-  });
+  assert.deepEqual(buildResultsMetaPayload(scored), [
+    { order: 1, key: "quadro_1_fisicos_bruto", label: "Quadro 1 físicos bruto", value: 12 },
+    { order: 2, key: "quadro_1_psicologicos_bruto", label: "Quadro 1 psicológicos bruto", value: 3 },
+    { order: 3, key: "quadro_2_fisicos_bruto", label: "Quadro 2 físicos bruto", value: 10 },
+    { order: 4, key: "quadro_2_psicologicos_bruto", label: "Quadro 2 psicológicos bruto", value: 5 },
+    { order: 5, key: "quadro_3_fisicos_bruto", label: "Quadro 3 físicos bruto", value: 12 },
+    { order: 6, key: "quadro_3_psicologicos_bruto", label: "Quadro 3 psicológicos bruto", value: 11 },
+    { order: 7, key: "issl_total_bruto", label: "ISSL total bruto", value: 53 }
+  ]);
 });
 
 test("impede o payload enquanto houver sintoma sem resposta", () => {
